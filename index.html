@@ -1,0 +1,2645 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HASH-41</title>
+<style>
+:root{
+  --red:#ef4444;
+  --orange:#f59e0b;
+  --blue:#3b82f6;
+  --green:#22c55e;
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0;
+  min-height:100%;
+  background:#000;
+  color:#fff;
+  font-family:Arial,Helvetica,sans-serif;
+}
+body{
+  min-height:100dvh;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:9px;
+}
+.app{
+  width:min(100%,520px);
+  height:min(680px,calc(100dvh - 18px));
+  min-height:540px;
+  display:flex;
+  flex-direction:column;
+  background:#000;
+}
+header{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  padding:6px;
+  background:#080808;
+  position:relative;
+  z-index:20;
+}
+.control-row{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:5px;
+}
+.prompt-row{
+  grid-template-columns:repeat(10,minmax(0,1fr));
+}
+.main-play{
+  grid-column:span 2;
+  font-size:16px;
+  background:#2563eb;
+}
+.one-time{
+  background:#7c3aed;
+}
+.manual-mode{
+  background:#0f766e;
+}
+.time-row{
+  grid-template-columns:48px repeat(2,minmax(90px,1fr)) 48px;
+}
+.timer-label-row{
+  display:grid;
+  grid-template-columns:48px repeat(2,minmax(90px,1fr)) 48px;
+  margin-top:-3px;
+  color:#777;
+  font-size:10px;
+  font-weight:800;
+  text-align:center;
+  text-transform:uppercase;
+  letter-spacing:.09em;
+}
+.weight-row{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:5px;
+}
+.weight-control{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  min-width:0;
+  color:#aaa;
+  font-size:11px;
+  font-weight:800;
+}
+.weight-control select{
+  width:100%;
+  min-width:0;
+  min-height:36px;
+  padding:0 4px;
+  background:#1f2937;
+  color:#fff;
+  text-align:center;
+  text-align-last:center;
+}
+.utility-row{
+  grid-template-columns:1fr auto;
+}
+.status-line{
+  min-height:36px;
+}
+button,select{
+  border:0;
+  border-radius:11px;
+  font-weight:700;
+}
+button{
+  min-height:40px;
+  padding:5px 4px;
+  background:#263248;
+  color:#fff;
+  font-size:13px;
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+button:active{transform:scale(.97)}
+button.active{
+  background:#22c55e;
+  color:#06130a;
+  box-shadow:0 0 0 2px rgba(34,197,94,.28),0 0 16px rgba(34,197,94,.35);
+}
+button.slow-burning{
+  animation:slowBurn 2s ease-in-out infinite;
+}
+button.dimmed{
+  opacity:.42;
+  filter:saturate(.35) brightness(.72);
+  box-shadow:none;
+  animation:none;
+}
+@keyframes slowBurn{
+  0%,100%{filter:brightness(.82);box-shadow:0 0 5px rgba(255,255,255,.12)}
+  50%{filter:brightness(1.28);box-shadow:0 0 20px rgba(255,255,255,.38)}
+}
+.seconds{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:11px;
+  background:#1f2937;
+  color:#fff;
+  font-weight:800;
+}
+.seconds-select{
+  width:100%;
+  min-height:40px;
+  padding:0 8px;
+  text-align:center;
+  text-align-last:center;
+  cursor:pointer;
+  border:2px solid transparent;
+}
+.timer-control.active-timer{
+  box-shadow:0 0 0 2px rgba(255,255,255,.18);
+}
+.p1-timer.active-timer{
+  border-color:#ef4444;
+  background:#471717;
+}
+.p2-timer.active-timer{
+  border-color:#f59e0b;
+  background:#493008;
+}
+.p3-timer.active-timer{
+  border-color:#3b82f6;
+  background:#112d57;
+}
+.p4-timer.active-timer{
+  border-color:#a855f7;
+  background:#32124d;
+}
+.prompt-mode.active{
+  background:#ffffff;
+  color:#111;
+  box-shadow:0 0 0 2px rgba(255,255,255,.25);
+}
+.status{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  font-size:12px;
+  opacity:.85;
+}
+
+.sequence-track{
+  position:relative;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  align-items:center;
+  margin:2px 10px 0;
+  height:34px;
+  z-index:20;
+}
+.sequence-track::before{
+  content:"";
+  position:absolute;
+  left:12.5%;
+  right:12.5%;
+  top:50%;
+  height:2px;
+  background:#262626;
+  transform:translateY(-50%);
+}
+.sequence-slot{
+  position:relative;
+  z-index:1;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:34px;
+}
+.sequence-dot{
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background:#383838;
+}
+.sequence-dot.hit{
+  animation:markerHit .55s ease-out;
+}
+.sequence-emoji{
+  position:absolute;
+  z-index:2;
+  top:50%;
+  left:12.5%;
+  transform:translate(-50%,-50%);
+  font-size:24px;
+  line-height:1;
+  transition:left var(--tracker-duration,.28s) linear;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.6));
+}
+.sequence-emoji.hit{
+  animation:emojiHit .55s ease-out;
+}
+@keyframes markerHit{
+  0%{transform:scale(1);background:#383838;box-shadow:none}
+  35%{transform:scale(2);background:#fff;box-shadow:0 0 18px #fff}
+  100%{transform:scale(1);background:#383838;box-shadow:none}
+}
+@keyframes emojiHit{
+  0%{filter:drop-shadow(0 2px 2px rgba(0,0,0,.6));transform:translate(-50%,-50%) scale(1)}
+  40%{filter:drop-shadow(0 0 14px #fff);transform:translate(-50%,-50%) scale(1.35)}
+  100%{filter:drop-shadow(0 2px 2px rgba(0,0,0,.6));transform:translate(-50%,-50%) scale(1)}
+}
+
+.card{
+  position:relative;
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:22px 24px;
+  background:#000;
+  overflow:hidden;
+}
+.tap-zone{
+  position:absolute;
+  top:0;
+  bottom:0;
+  border:0;
+  border-radius:0;
+  padding:0;
+  min-height:0;
+  background:transparent;
+  z-index:1;
+  touch-action:manipulation;
+}
+.tap-zone:active{transform:none;background:rgba(255,255,255,.025)}
+.tap-prev{left:0;width:33.333%}
+.tap-mid{left:33.333%;width:33.334%}
+.tap-next{right:0;width:33.333%}
+.content{
+  position:absolute;
+  z-index:2;
+  pointer-events:none;
+  inset:0;
+  width:100%;
+  padding:0;
+}
+.verb{
+  font-size:clamp(36px,8vw,68px);
+  font-weight:900;
+  line-height:.95;
+  overflow-wrap:anywhere;
+}
+.goal{
+  max-width:660px;
+  margin-top:18px;
+  color:#c7c7c7;
+  font-size:clamp(16px,2.5vw,21px);
+  line-height:1.4;
+}
+.goal-label{
+  display:block;
+  margin-bottom:6px;
+  font-size:.7em;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  opacity:.55;
+}
+.extra-prompt{
+  margin-top:16px;
+  padding:10px 16px;
+  border:1px solid var(--extra-border,#3b3b3b);
+  border-radius:12px;
+  background:var(--extra-bg,#151515);
+  color:var(--extra-color,#d7d7d7);
+  font-size:clamp(17px,2.8vw,23px);
+  font-weight:900;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  text-shadow:0 1px 8px rgba(0,0,0,.38);
+}
+.prompt-layer{
+  width:min(88%,460px);
+}
+.p1-layer{
+  position:absolute;
+  top:9%;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+}
+.layer-prompt{
+  position:absolute;
+  top:56%;
+  width:auto;
+  max-width:44%;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:var(--layer-color,#fff);
+  font-size:clamp(18px,3vw,25px);
+  font-weight:900;
+  letter-spacing:.04em;
+  text-transform:none;
+  text-shadow:0 1px 8px rgba(0,0,0,.4);
+}
+#p2PromptDisplay{
+  left:6%;
+  text-align:left;
+}
+#p3PromptDisplay{
+  right:6%;
+  text-align:right;
+}
+.category{display:none!important}
+.hidden{display:none!important}
+.prompt-expired{visibility:hidden!important}
+.step4-dance{
+  position:absolute;
+  z-index:4;
+  left:-14%;
+  top:20%;
+  width:clamp(44px,10vw,66px);
+  aspect-ratio:1;
+  border-radius:50%;
+  background:var(--pong-color,#22c55e);
+  pointer-events:none;
+  box-shadow:0 0 22px var(--pong-color,#22c55e);
+}
+.step4-dance.running{
+  animation:step4PongAcross var(--dance-duration,5s) linear forwards;
+}
+@keyframes step4PongAcross{
+  0%{left:-14%;top:20%;transform:rotate(0)}
+  20%{left:12%;top:76%;transform:rotate(100deg)}
+  40%{left:38%;top:16%;transform:rotate(200deg)}
+  60%{left:64%;top:72%;transform:rotate(300deg)}
+  80%{left:88%;top:18%;transform:rotate(400deg)}
+  100%{left:110%;top:58%;transform:rotate(500deg)}
+}
+.progress{
+  height:8px;
+  background:#222;
+  overflow:hidden;
+}
+.bar{
+  height:100%;
+  width:0;
+}
+.modal{
+  position:fixed;
+  inset:0;
+  z-index:100;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:rgba(0,0,0,.78);
+}
+.modal.open{display:flex}
+.panel{
+  width:min(100%,440px);
+  max-height:88dvh;
+  overflow:auto;
+  border-radius:16px;
+  padding:18px;
+  background:#111827;
+}
+.panel h2{margin:0 0 12px}
+.setting-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:12px 0;
+  border-bottom:1px solid #303846;
+}
+.setting-row select{
+  padding:9px;
+  max-width:58%;
+  background:#263248;
+  color:#fff;
+}
+.switch{
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+.switch input{
+  width:22px;
+  height:22px;
+}
+.done{
+  width:100%;
+  margin-top:16px;
+  background:#3b82f6;
+}
+@media(max-width:520px){
+  body{padding:0}
+  .app{width:100%;height:100dvh;min-height:500px}
+  .card{min-height:0;padding:18px}
+  button{
+    min-height:44px;
+    font-size:15px;
+  }
+  .seconds-select{
+    min-height:44px;
+    font-size:17px;
+  }
+  .timer-label-row{
+    font-size:12px;
+  }
+  .weight-control{
+    font-size:14px;
+  }
+  .weight-control select{
+    min-height:42px;
+    font-size:16px;
+  }
+  .status{
+    font-size:14px;
+  }
+  .verb{
+    font-size:clamp(50px,15vw,76px);
+  }
+  .layer-prompt{
+    font-size:clamp(28px,8vw,40px);
+  }
+  .step4-dance{
+    width:clamp(50px,15vw,72px);
+  }
+  .goal{
+    font-size:19px;
+  }
+  .panel,
+  .panel select{
+    font-size:16px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="control-row prompt-row">
+      <button id="playBtn" class="main-play dimmed" type="button" aria-label="Play or stop">Play</button>
+      <button id="oneTimeBtn" class="one-time active" type="button" aria-label="Play one complete sequence">One time</button>
+      <button id="manualBtn" class="manual-mode dimmed" type="button" aria-label="Toggle manual prompts">Manual</button>
+      <button id="newBtn" type="button" aria-label="Start a new emotion set">New</button>
+      <button id="p1Btn" class="prompt-mode active" type="button" aria-label="Toggle prompt one">P1</button>
+      <button id="p2Btn" class="prompt-mode" type="button" aria-label="Toggle prompt two">P2</button>
+      <button id="p3Btn" class="prompt-mode" type="button" aria-label="Toggle prompt three">P3</button>
+      <button id="p4Btn" class="prompt-mode" type="button" aria-label="Toggle timed prompt display">P4</button>
+      <button id="soundBtn" type="button" aria-label="Toggle sound">Sound: Off</button>
+    </div>
+
+    <div class="control-row time-row">
+      <button id="minusBtn" type="button" aria-label="Decrease selected timer by one second">−</button>
+      <select id="p1SecondsDisplay" class="seconds seconds-select timer-control active-timer p1-timer" aria-label="T1 seconds between prompts"></select>
+      <select id="p2SecondsDisplay" class="seconds seconds-select timer-control p2-timer hidden" aria-label="Legacy P2 seconds"></select>
+      <select id="p3SecondsDisplay" class="seconds seconds-select timer-control p3-timer hidden" aria-label="Legacy P3 seconds"></select>
+      <select id="p4SecondsDisplay" class="seconds seconds-select timer-control p4-timer" aria-label="T2 prompt display seconds"></select>
+      <button id="plusBtn" type="button" aria-label="Increase selected timer by one second">+</button>
+    </div>
+
+    <div class="timer-label-row">
+      <span></span><span>T1 · Prompt time</span><span>T2 · Display</span><span></span>
+    </div>
+
+    <div class="weight-row" aria-label="Prompt group weights">
+      <label class="weight-control">P1 <select id="p1WeightSelect" aria-label="P1 weight"></select></label>
+      <label class="weight-control">P2 <select id="p2WeightSelect" aria-label="P2 weight"></select></label>
+      <label class="weight-control">P3 <select id="p3WeightSelect" aria-label="P3 weight"></select></label>
+    </div>
+
+    <div class="control-row utility-row">
+      <div id="statusDisplay" class="status status-line">Set 1 · 1/4</div>
+      <button id="settingsBtn" type="button" aria-label="Settings">⚙ Settings</button>
+    </div>
+  </header>
+
+
+  <div class="sequence-track" aria-label="Current position in four-step sequence">
+    <div class="sequence-slot"><span class="sequence-dot"></span></div>
+    <div class="sequence-slot"><span class="sequence-dot"></span></div>
+    <div class="sequence-slot"><span class="sequence-dot"></span></div>
+    <div class="sequence-slot"><span class="sequence-dot"></span></div>
+    <div id="sequenceEmoji" class="sequence-emoji hidden" aria-hidden="true">🐉</div>
+  </div>
+
+  <main id="card" class="card">
+    <button id="prevZone" class="tap-zone tap-prev" type="button" aria-label="Previous prompt"></button>
+    <button id="midZone" class="tap-zone tap-mid" type="button" aria-label="Play or pause; double tap for a new set"></button>
+    <button id="nextZone" class="tap-zone tap-next" type="button" aria-label="Next prompt"></button>
+    <div class="content">
+      <div id="p1PromptDisplay" class="prompt-layer p1-layer prompt-expired">
+        <div id="verbDisplay" class="verb">HAPPY</div>
+        <div id="goalDisplay" class="goal hidden"></div>
+      </div>
+      <div id="p2PromptDisplay" class="layer-prompt prompt-layer hidden"><span id="p2PromptText">🎬 Action</span></div>
+      <div id="p3PromptDisplay" class="layer-prompt prompt-layer hidden"><span id="p3PromptText">⏸️ Pause</span></div>
+    </div>
+    <div id="step4Dance" class="step4-dance hidden" aria-hidden="true"></div>
+    
+  </main>
+
+  <div id="progressTrack" class="progress hidden">
+    <div id="progressBar" class="bar"></div>
+  </div>
+</div>
+
+<div id="settingsModal" class="modal" aria-hidden="true">
+  <section class="panel" aria-label="Settings">
+    <h2>Settings</h2>
+
+    <div class="setting-row hidden">
+      <label for="delaySelect">Seconds between cards</label>
+      <select id="delaySelect"></select>
+    </div>
+
+    <div class="setting-row">
+      <span>Continuous autoplay</span>
+      <label class="switch">
+        <input id="continuousToggle" type="checkbox" checked>
+        On
+      </label>
+    </div>
+
+    <div class="setting-row">
+      <span>Speech sound</span>
+      <label class="switch">
+        <input id="soundToggle" type="checkbox">
+        On
+      </label>
+    </div>
+
+    <div class="setting-row">
+      <label for="speechSpeedSelect">Speech speed</label>
+      <select id="speechSpeedSelect" aria-label="Speech speed">
+        <option value="100" selected>100% · Normal/fast</option>
+        <option value="75">75%</option>
+        <option value="50">50%</option>
+        <option value="25">25%</option>
+        <option value="10">10%</option>
+      </select>
+    </div>
+
+    <div class="setting-row">
+      <label for="excitementSelect">Voice excitement</label>
+      <select id="excitementSelect" aria-label="Voice excitement">
+        <option value="1">1 · Calm</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5 · Balanced</option>
+        <option value="6">6</option>
+        <option value="7" selected>7 · Excited</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10 · Maximum</option>
+      </select>
+    </div>
+
+    <div class="setting-row">
+      <label for="p1VoiceSelect">P1 voice</label>
+      <select id="p1VoiceSelect" aria-label="P1 voice"></select>
+    </div>
+
+    <div class="setting-row">
+      <label for="p2VoiceSelect">P2 voice · male default</label>
+      <select id="p2VoiceSelect" aria-label="P2 voice"></select>
+    </div>
+
+    <div class="setting-row">
+      <label for="p3VoiceSelect">P3 voice</label>
+      <select id="p3VoiceSelect" aria-label="P3 voice"></select>
+    </div>
+
+    <div class="setting-row">
+      <span>Show timer bar</span>
+      <label class="switch">
+        <input id="progressToggle" type="checkbox" checked>
+        On
+      </label>
+    </div>
+
+    
+
+
+    <div class="setting-row hidden">
+      <label for="p1DelaySelect">Seconds between prompts</label>
+      <select id="p1DelaySelect"></select>
+    </div>
+
+    <div class="setting-row hidden">
+      <label for="p2DelaySelect">P2 prompt timing</label>
+      <select id="p2DelaySelect"></select>
+    </div>
+
+    <div class="setting-row hidden">
+      <label for="p3DelaySelect">P3 prompt timing</label>
+      <select id="p3DelaySelect"></select>
+    </div>
+
+    <div class="setting-row">
+      <label for="step4DanceSelect">Step 4 Pong</label>
+      <select id="step4DanceSelect" aria-label="Step 4 Pong duration"></select>
+    </div>
+
+    <div class="setting-row">
+      <span>Show emotion description</span>
+      <label class="switch">
+        <input id="detailsToggle" type="checkbox">
+        On
+      </label>
+    </div>
+      <div id="extraPromptSettings" style="display:grid;grid-template-columns:1fr 1fr;gap:7px"></div>
+    </div>
+
+  </section>
+</div>
+
+<script>
+const sets = [
+  [
+    {
+      "verb": "Happy",
+      "category": "Positive",
+      "goal": "Tell the story as if something good has just happened."
+    },
+    {
+      "verb": "Angry",
+      "category": "Light Negative",
+      "goal": "Let irritation or conflict enter the story."
+    },
+    {
+      "verb": "Sad",
+      "category": "Worse Negative",
+      "goal": "Let the loss or disappointment become emotionally heavy."
+    },
+    {
+      "verb": "Happy",
+      "category": "Positive Return",
+      "goal": "Find a new reason for hope, joy, or connection."
+    }
+  ],
+  [
+    {
+      "verb": "Joyful",
+      "category": "Positive",
+      "goal": "Let the character feel alive, playful, and delighted."
+    },
+    {
+      "verb": "Annoyed",
+      "category": "Light Negative",
+      "goal": "Introduce a small obstacle that gets under the character's skin."
+    },
+    {
+      "verb": "Heartbroken",
+      "category": "Worse Negative",
+      "goal": "Make the character feel that something precious has been lost."
+    },
+    {
+      "verb": "Grateful",
+      "category": "Positive Return",
+      "goal": "Let the character recognize what still remains."
+    }
+  ],
+  [
+    {
+      "verb": "Excited",
+      "category": "Positive",
+      "goal": "Raise the energy with anticipation and possibility."
+    },
+    {
+      "verb": "Uneasy",
+      "category": "Light Negative",
+      "goal": "Add a feeling that something may be wrong."
+    },
+    {
+      "verb": "Terrified",
+      "category": "Worse Negative",
+      "goal": "Make the danger feel immediate and overwhelming."
+    },
+    {
+      "verb": "Relieved",
+      "category": "Positive Return",
+      "goal": "Release the tension and let safety return."
+    }
+  ],
+  [
+    {
+      "verb": "Confident",
+      "category": "Positive",
+      "goal": "Let the character act as if success is possible."
+    },
+    {
+      "verb": "Doubtful",
+      "category": "Light Negative",
+      "goal": "Make the character question their plan or ability."
+    },
+    {
+      "verb": "Hopeless",
+      "category": "Worse Negative",
+      "goal": "Make the character believe there is no way forward."
+    },
+    {
+      "verb": "Determined",
+      "category": "Positive Return",
+      "goal": "Let the character choose to continue anyway."
+    }
+  ],
+  [
+    {
+      "verb": "Loved",
+      "category": "Positive",
+      "goal": "Show warmth, belonging, and emotional safety."
+    },
+    {
+      "verb": "Jealous",
+      "category": "Light Negative",
+      "goal": "Introduce comparison, rivalry, or fear of losing someone."
+    },
+    {
+      "verb": "Rejected",
+      "category": "Worse Negative",
+      "goal": "Make the character feel unwanted or pushed away."
+    },
+    {
+      "verb": "Accepted",
+      "category": "Positive Return",
+      "goal": "Let someone welcome the character back in."
+    }
+  ],
+  [
+    {
+      "verb": "Peaceful",
+      "category": "Positive",
+      "goal": "Slow the story down and create calm."
+    },
+    {
+      "verb": "Restless",
+      "category": "Light Negative",
+      "goal": "Let the character feel unable to settle."
+    },
+    {
+      "verb": "Overwhelmed",
+      "category": "Worse Negative",
+      "goal": "Make too many pressures arrive at once."
+    },
+    {
+      "verb": "Calm",
+      "category": "Positive Return",
+      "goal": "Let the character regain breath, focus, and control."
+    }
+  ],
+  [
+    {
+      "verb": "Curious",
+      "category": "Positive",
+      "goal": "Let the character explore something unknown."
+    },
+    {
+      "verb": "Confused",
+      "category": "Light Negative",
+      "goal": "Make the clues or situation harder to understand."
+    },
+    {
+      "verb": "Lost",
+      "category": "Worse Negative",
+      "goal": "Remove the character's sense of direction or certainty."
+    },
+    {
+      "verb": "Inspired",
+      "category": "Positive Return",
+      "goal": "Let a new idea reveal the way forward."
+    }
+  ],
+  [
+    {
+      "verb": "Proud",
+      "category": "Positive",
+      "goal": "Show the character enjoying what they achieved."
+    },
+    {
+      "verb": "Embarrassed",
+      "category": "Light Negative",
+      "goal": "Expose a mistake or awkward moment."
+    },
+    {
+      "verb": "Ashamed",
+      "category": "Worse Negative",
+      "goal": "Make the character feel deeply flawed or unworthy."
+    },
+    {
+      "verb": "Forgiven",
+      "category": "Positive Return",
+      "goal": "Let compassion release the character from shame."
+    }
+  ],
+  [
+    {
+      "verb": "Playful",
+      "category": "Positive",
+      "goal": "Make the scene mischievous, light, and spontaneous."
+    },
+    {
+      "verb": "Bored",
+      "category": "Light Negative",
+      "goal": "Drain the energy and make the character crave change."
+    },
+    {
+      "verb": "Empty",
+      "category": "Worse Negative",
+      "goal": "Make the character feel disconnected from meaning."
+    },
+    {
+      "verb": "Delighted",
+      "category": "Positive Return",
+      "goal": "Bring surprise, fun, or wonder back into the story."
+    }
+  ],
+  [
+    {
+      "verb": "Hopeful",
+      "category": "Positive",
+      "goal": "Let the character believe a good future is possible."
+    },
+    {
+      "verb": "Worried",
+      "category": "Light Negative",
+      "goal": "Introduce concern about what might happen."
+    },
+    {
+      "verb": "Despairing",
+      "category": "Worse Negative",
+      "goal": "Make the future seem completely closed."
+    },
+    {
+      "verb": "Optimistic",
+      "category": "Positive Return",
+      "goal": "Reveal one real possibility worth believing in."
+    }
+  ],
+  [
+    {
+      "verb": "Trusting",
+      "category": "Positive",
+      "goal": "Let the character open up and rely on someone."
+    },
+    {
+      "verb": "Suspicious",
+      "category": "Light Negative",
+      "goal": "Plant doubt about another person's motives."
+    },
+    {
+      "verb": "Betrayed",
+      "category": "Worse Negative",
+      "goal": "Reveal that trust has been seriously broken."
+    },
+    {
+      "verb": "Reassured",
+      "category": "Positive Return",
+      "goal": "Give the character evidence that trust can return."
+    }
+  ],
+  [
+    {
+      "verb": "Energetic",
+      "category": "Positive",
+      "goal": "Give the story speed, movement, and enthusiasm."
+    },
+    {
+      "verb": "Frustrated",
+      "category": "Light Negative",
+      "goal": "Block progress and make effort feel difficult."
+    },
+    {
+      "verb": "Defeated",
+      "category": "Worse Negative",
+      "goal": "Make the character believe they have lost."
+    },
+    {
+      "verb": "Empowered",
+      "category": "Positive Return",
+      "goal": "Let the character recover strength and agency."
+    }
+  ],
+  [
+    {
+      "verb": "Connected",
+      "category": "Positive",
+      "goal": "Show mutual understanding and closeness."
+    },
+    {
+      "verb": "Lonely",
+      "category": "Light Negative",
+      "goal": "Separate the character emotionally from others."
+    },
+    {
+      "verb": "Abandoned",
+      "category": "Worse Negative",
+      "goal": "Make the character feel completely left behind."
+    },
+    {
+      "verb": "Belonging",
+      "category": "Positive Return",
+      "goal": "Let the character discover a place or person that feels like home."
+    }
+  ],
+  [
+    {
+      "verb": "Safe",
+      "category": "Positive",
+      "goal": "Let the character relax because danger feels far away."
+    },
+    {
+      "verb": "Nervous",
+      "category": "Light Negative",
+      "goal": "Introduce tension, uncertainty, or social pressure."
+    },
+    {
+      "verb": "Panicked",
+      "category": "Worse Negative",
+      "goal": "Make fear take over the character's body and choices."
+    },
+    {
+      "verb": "Secure",
+      "category": "Positive Return",
+      "goal": "Restore protection, stability, or reliable support."
+    }
+  ],
+  [
+    {
+      "verb": "Free",
+      "category": "Positive",
+      "goal": "Let the character act without restraint."
+    },
+    {
+      "verb": "Pressured",
+      "category": "Light Negative",
+      "goal": "Add expectations or demands from others."
+    },
+    {
+      "verb": "Trapped",
+      "category": "Worse Negative",
+      "goal": "Remove every obvious escape."
+    },
+    {
+      "verb": "Liberated",
+      "category": "Positive Return",
+      "goal": "Let the character break through the restriction."
+    }
+  ],
+  [
+    {
+      "verb": "Amazed",
+      "category": "Positive",
+      "goal": "Reveal something extraordinary."
+    },
+    {
+      "verb": "Startled",
+      "category": "Light Negative",
+      "goal": "Interrupt the moment with an unexpected shock."
+    },
+    {
+      "verb": "Horrified",
+      "category": "Worse Negative",
+      "goal": "Reveal something deeply disturbing."
+    },
+    {
+      "verb": "Awed",
+      "category": "Positive Return",
+      "goal": "Transform fear into wonder or reverence."
+    }
+  ],
+  [
+    {
+      "verb": "Affectionate",
+      "category": "Positive",
+      "goal": "Let tenderness shape the character's actions."
+    },
+    {
+      "verb": "Irritated",
+      "category": "Light Negative",
+      "goal": "Make a loved person's behavior difficult to tolerate."
+    },
+    {
+      "verb": "Hateful",
+      "category": "Worse Negative",
+      "goal": "Let anger harden into rejection or hostility."
+    },
+    {
+      "verb": "Compassionate",
+      "category": "Positive Return",
+      "goal": "Let the character see the pain beneath the conflict."
+    }
+  ],
+  [
+    {
+      "verb": "Interested",
+      "category": "Positive",
+      "goal": "Draw the character toward a person, clue, or possibility."
+    },
+    {
+      "verb": "Distracted",
+      "category": "Light Negative",
+      "goal": "Pull their attention in conflicting directions."
+    },
+    {
+      "verb": "Disconnected",
+      "category": "Worse Negative",
+      "goal": "Make the character lose contact with what mattered."
+    },
+    {
+      "verb": "Engaged",
+      "category": "Positive Return",
+      "goal": "Let the character choose what deserves full attention."
+    }
+  ],
+  [
+    {
+      "verb": "Brave",
+      "category": "Positive",
+      "goal": "Let the character move toward difficulty."
+    },
+    {
+      "verb": "Hesitant",
+      "category": "Light Negative",
+      "goal": "Slow the character with uncertainty."
+    },
+    {
+      "verb": "Cowardly",
+      "category": "Worse Negative",
+      "goal": "Make fear control the character's decision."
+    },
+    {
+      "verb": "Courageous",
+      "category": "Positive Return",
+      "goal": "Let the character act despite fear."
+    }
+  ],
+  [
+    {
+      "verb": "Generous",
+      "category": "Positive",
+      "goal": "Let the character give time, care, or resources freely."
+    },
+    {
+      "verb": "Resentful",
+      "category": "Light Negative",
+      "goal": "Make the character feel they have given too much."
+    },
+    {
+      "verb": "Bitter",
+      "category": "Worse Negative",
+      "goal": "Let old hurt poison the present."
+    },
+    {
+      "verb": "Kind",
+      "category": "Positive Return",
+      "goal": "Let the character choose warmth without denying the hurt."
+    }
+  ],
+  [
+    {
+      "verb": "Focused",
+      "category": "Positive",
+      "goal": "Give the character a clear purpose."
+    },
+    {
+      "verb": "Impatient",
+      "category": "Light Negative",
+      "goal": "Make progress feel too slow."
+    },
+    {
+      "verb": "Out of Control",
+      "category": "Worse Negative",
+      "goal": "Let impulse or chaos take over."
+    },
+    {
+      "verb": "Balanced",
+      "category": "Positive Return",
+      "goal": "Restore rhythm, proportion, and deliberate choice."
+    }
+  ],
+  [
+    {
+      "verb": "Admired",
+      "category": "Positive",
+      "goal": "Let the character feel seen for their strengths."
+    },
+    {
+      "verb": "Insecure",
+      "category": "Light Negative",
+      "goal": "Make them compare themselves unfavorably."
+    },
+    {
+      "verb": "Worthless",
+      "category": "Worse Negative",
+      "goal": "Make the character believe they have no value."
+    },
+    {
+      "verb": "Valued",
+      "category": "Positive Return",
+      "goal": "Let someone recognize their true contribution."
+    }
+  ],
+  [
+    {
+      "verb": "Amused",
+      "category": "Positive",
+      "goal": "Find the funny side of the moment."
+    },
+    {
+      "verb": "Awkward",
+      "category": "Light Negative",
+      "goal": "Make the social rhythm go slightly wrong."
+    },
+    {
+      "verb": "Humiliated",
+      "category": "Worse Negative",
+      "goal": "Expose the character publicly and painfully."
+    },
+    {
+      "verb": "Lighthearted",
+      "category": "Positive Return",
+      "goal": "Let humor restore dignity and connection."
+    }
+  ],
+  [
+    {
+      "verb": "Motivated",
+      "category": "Positive",
+      "goal": "Let the character want to begin."
+    },
+    {
+      "verb": "Discouraged",
+      "category": "Light Negative",
+      "goal": "Make the task feel less possible."
+    },
+    {
+      "verb": "Exhausted",
+      "category": "Worse Negative",
+      "goal": "Take away the character's physical or emotional energy."
+    },
+    {
+      "verb": "Renewed",
+      "category": "Positive Return",
+      "goal": "Give the character a fresh source of energy."
+    }
+  ],
+  [
+    {
+      "verb": "Content",
+      "category": "Positive",
+      "goal": "Let the character appreciate the present moment."
+    },
+    {
+      "verb": "Dissatisfied",
+      "category": "Light Negative",
+      "goal": "Make something feel insufficient."
+    },
+    {
+      "verb": "Miserable",
+      "category": "Worse Negative",
+      "goal": "Let dissatisfaction spread across the character's whole world."
+    },
+    {
+      "verb": "Fulfilled",
+      "category": "Positive Return",
+      "goal": "Let the character reconnect with meaning and enoughness."
+    }
+  ],
+  [
+    {
+      "verb": "Respectful",
+      "category": "Positive",
+      "goal": "Let the character recognize another person's dignity."
+    },
+    {
+      "verb": "Disapproving",
+      "category": "Light Negative",
+      "goal": "Make the character judge another person's choice."
+    },
+    {
+      "verb": "Disgusted",
+      "category": "Worse Negative",
+      "goal": "Make rejection feel physical and absolute."
+    },
+    {
+      "verb": "Understanding",
+      "category": "Positive Return",
+      "goal": "Let the character see the situation from another side."
+    }
+  ],
+  [
+    {
+      "verb": "Open",
+      "category": "Positive",
+      "goal": "Let the character welcome change or new information."
+    },
+    {
+      "verb": "Defensive",
+      "category": "Light Negative",
+      "goal": "Make the character protect themselves from criticism."
+    },
+    {
+      "verb": "Hostile",
+      "category": "Worse Negative",
+      "goal": "Turn protection into active opposition."
+    },
+    {
+      "verb": "Receptive",
+      "category": "Positive Return",
+      "goal": "Let the character listen without surrendering themselves."
+    }
+  ],
+  [
+    {
+      "verb": "Patient",
+      "category": "Positive",
+      "goal": "Let time and attention work in the character's favor."
+    },
+    {
+      "verb": "Agitated",
+      "category": "Light Negative",
+      "goal": "Make waiting increasingly uncomfortable."
+    },
+    {
+      "verb": "Furious",
+      "category": "Worse Negative",
+      "goal": "Let anger reach its breaking point."
+    },
+    {
+      "verb": "Serene",
+      "category": "Positive Return",
+      "goal": "Let the character release the struggle and regain peace."
+    }
+  ],
+  [
+    {
+      "verb": "Surprised",
+      "category": "Positive",
+      "goal": "Let an unexpected event open a new possibility."
+    },
+    {
+      "verb": "Disappointed",
+      "category": "Light Negative",
+      "goal": "Make reality fail to meet expectation."
+    },
+    {
+      "verb": "Devastated",
+      "category": "Worse Negative",
+      "goal": "Make the setback feel life-changing."
+    },
+    {
+      "verb": "Encouraged",
+      "category": "Positive Return",
+      "goal": "Reveal support, progress, or a second chance."
+    }
+  ],
+  [
+    {
+      "verb": "Independent",
+      "category": "Positive",
+      "goal": "Let the character rely on their own judgment."
+    },
+    {
+      "verb": "Isolated",
+      "category": "Light Negative",
+      "goal": "Make independence begin to feel lonely."
+    },
+    {
+      "verb": "Helpless",
+      "category": "Worse Negative",
+      "goal": "Remove the character's ability to solve the problem alone."
+    },
+    {
+      "verb": "Supported",
+      "category": "Positive Return",
+      "goal": "Let help arrive without taking away the character's agency."
+    }
+  ],
+  [
+    {
+      "verb": "Creative",
+      "category": "Positive",
+      "goal": "Let new ideas multiply."
+    },
+    {
+      "verb": "Blocked",
+      "category": "Light Negative",
+      "goal": "Make imagination stall."
+    },
+    {
+      "verb": "Desperate",
+      "category": "Worse Negative",
+      "goal": "Make the character feel that every idea has failed."
+    },
+    {
+      "verb": "Inventive",
+      "category": "Positive Return",
+      "goal": "Let one strange possibility unlock the story."
+    }
+  ],
+  [
+    {
+      "verb": "Alive",
+      "category": "Positive",
+      "goal": "Make the character feel intensely present."
+    },
+    {
+      "verb": "Tired",
+      "category": "Light Negative",
+      "goal": "Slow the character's body and thinking."
+    },
+    {
+      "verb": "Numb",
+      "category": "Worse Negative",
+      "goal": "Make the character unable to feel or respond."
+    },
+    {
+      "verb": "Awakened",
+      "category": "Positive Return",
+      "goal": "Bring sensation, purpose, and emotional life back."
+    }
+  ]
+];
+
+for (const emotionSet of sets) {
+  emotionSet[3] = {
+    ...emotionSet[3],
+    verb: emotionSet[0].verb
+  };
+}
+
+const colors = ["#ef4444","#f59e0b","#22c55e","#3b82f6"];
+const setEmojis = ["🌞", "🎈", "⚡", "🦁", "💞", "🌿", "🔍", "🏆", "🎭", "🌱", "🤝", "🔥", "🏠", "🛡️", "🕊️", "✨", "💗", "🧭", "🐯", "🎁", "🎯", "🌟", "😄", "🚀", "🍀", "🌍", "🚪", "🌊", "🌦️", "🧩", "🎨", "🌅"];
+
+const p2Prompts = [
+  {text:"Action", emoji:"🎬", color:"#ff5d73", bg:"#321018", border:"#9a3044"},
+  {text:"Details", emoji:"🔎", color:"#ffd166", bg:"#332709", border:"#967523"}
+];
+
+const p3Prompts = [
+  {text:"Pause", emoji:"⏸️", color:"#d5b3ff", bg:"#251536", border:"#744ca0"},
+  {text:"Mime", emoji:"🤫", color:"#ffad73", bg:"#32190c", border:"#96542b"},
+  {text:"Sound", emoji:"🔊", color:"#78adff", bg:"#10244a", border:"#3c6ab1"},
+  {text:"Repeat", emoji:"🔁", color:"#ff79d7", bg:"#350e2c", border:"#9e3a82"},
+  {text:"Hashtag", emoji:"#️⃣", color:"#66e2bd", bg:"#0a2e25", border:"#2b8c71"}
+];
+
+const timerOptions = [1,2,3,5,8,10,15,30,40,50,60,90,120];
+const p4TimerOptions = [0.5,1,1.4,1.5,2,2.5,3,5,10,15];
+
+let p1DelaySeconds = 8;
+let p2DelaySeconds = 9;
+let p3DelaySeconds = 12;
+let p4DisplaySeconds = 2.5;
+let p1Weight = 40;
+let p2Weight = 30;
+let p3Weight = 30;
+const weightScores = {p1:0, p2:0, p3:0};
+let currentGroup = "p1";
+let advanceP1WhenShown = false;
+let step4DanceSeconds = 5;
+let step4DanceTimer = null;
+let step4PongRun = 0;
+const step4PongColors = [
+  "#22c55e","#3b82f6","#f59e0b","#ef4444",
+  "#a855f7","#06b6d4","#f472b6","#facc15"
+];
+
+let activePrompt = "p1";
+let p1Visible = true;
+let p2Visible = true;
+let p3Visible = true;
+let p4Active = true;
+let p2Index = 0;
+let p3Index = 0;
+let p2Timer = null;
+let p2WindowEndTimer = null;
+let p3Timer = null;
+const p4HideTimers = {p1:null, p2:null, p3:null};
+let sequencePhaseIndex = 0;
+let currentPhaseDurationSeconds = p1DelaySeconds;
+
+let setIndex = 0;
+let cardIndex = 0;
+let delaySeconds = 15;
+let soundOn = false;
+let speechSpeedPercent = 100;
+let excitementLevel = 7;
+let playing = false;
+let midlinePaused = false;
+let oneTimeMode = false;
+let oneTimeEnabled = true;
+let awaitingStart = true;
+let advanceSetOnStart = false;
+let manualEnabled = false;
+let manualAdvanceReady = false;
+let manualReadyTimer = null;
+let manualEndTimer = null;
+let continuous = true;
+let showProgress = true;
+let showDetails = false;
+let timer = null;
+let animationFrame = null;
+let startedAt = 0;
+let promptHistory = [];
+let promptHistoryIndex = -1;
+let restoringPromptHistory = false;
+let middleTapTimer = null;
+let lastMiddleTapAt = 0;
+
+const verbDisplay = document.getElementById("verbDisplay");
+const goalDisplay = document.getElementById("goalDisplay");
+const categoryDisplay = document.getElementById("categoryDisplay");
+const statusDisplay = document.getElementById("statusDisplay");
+const progressTrack = document.getElementById("progressTrack");
+const progressBar = document.getElementById("progressBar");
+const playBtn = document.getElementById("playBtn");
+const oneTimeBtn = document.getElementById("oneTimeBtn");
+const manualBtn = document.getElementById("manualBtn");
+const soundBtn = document.getElementById("soundBtn");
+const settingsModal = document.getElementById("settingsModal");
+const delaySelect = document.getElementById("delaySelect");
+const soundToggle = document.getElementById("soundToggle");
+const sequenceEmoji = document.getElementById("sequenceEmoji");
+const sequenceDots = [...document.querySelectorAll(".sequence-dot")];
+const p1Btn = document.getElementById("p1Btn");
+const p1PromptDisplay = document.getElementById("p1PromptDisplay");
+const p2Btn = document.getElementById("p2Btn");
+const p3Btn = document.getElementById("p3Btn");
+const p4Btn = document.getElementById("p4Btn");
+const p1SecondsDisplay = document.getElementById("p1SecondsDisplay");
+const p2SecondsDisplay = document.getElementById("p2SecondsDisplay");
+const p3SecondsDisplay = document.getElementById("p3SecondsDisplay");
+const p4SecondsDisplay = document.getElementById("p4SecondsDisplay");
+const p1WeightSelect = document.getElementById("p1WeightSelect");
+const p2WeightSelect = document.getElementById("p2WeightSelect");
+const p3WeightSelect = document.getElementById("p3WeightSelect");
+const step4Dance = document.getElementById("step4Dance");
+const step4DanceSelect = document.getElementById("step4DanceSelect");
+const p1VoiceSelect = document.getElementById("p1VoiceSelect");
+const p2VoiceSelect = document.getElementById("p2VoiceSelect");
+const p3VoiceSelect = document.getElementById("p3VoiceSelect");
+const speechSpeedSelect = document.getElementById("speechSpeedSelect");
+const excitementSelect = document.getElementById("excitementSelect");
+const p1DelaySelect = document.getElementById("p1DelaySelect");
+const p2DelaySelect = document.getElementById("p2DelaySelect");
+const p3DelaySelect = document.getElementById("p3DelaySelect");
+const p2PromptDisplay = document.getElementById("p2PromptDisplay");
+const p2PromptText = document.getElementById("p2PromptText");
+const p3PromptDisplay = document.getElementById("p3PromptDisplay");
+const p3PromptText = document.getElementById("p3PromptText");
+
+const timeOptions = timerOptions;
+
+function fillTimerSelect(select, selectedValue, compact = false) {
+  select.innerHTML = "";
+  for (const second of timerOptions) {
+    const option = document.createElement("option");
+    option.value = String(second);
+    option.textContent = compact ? `${second} s` : `${second} second${second === 1 ? "" : "s"}`;
+    if (second === selectedValue) option.selected = true;
+    select.appendChild(option);
+  }
+}
+
+function formatSeconds(second, compact = false) {
+  const value = String(second).replace(".", ",");
+  return compact ? `${value} s` : `${value} second${second === 1 ? "" : "s"}`;
+}
+
+function fillP4TimerSelect() {
+  p4SecondsDisplay.innerHTML = "";
+  for (const second of p4TimerOptions) {
+    const option = document.createElement("option");
+    option.value = String(second);
+    option.textContent = formatSeconds(second, true);
+    if (second === p4DisplaySeconds) option.selected = true;
+    p4SecondsDisplay.appendChild(option);
+  }
+}
+
+function fillWeightSelect(select, selectedValue) {
+  select.innerHTML = "";
+  for (let value = 0; value <= 100; value += 5) {
+    const option = document.createElement("option");
+    option.value = String(value);
+    option.textContent = `${value}%`;
+    if (value === selectedValue) option.selected = true;
+    select.appendChild(option);
+  }
+}
+
+function fillStep4DanceSelect() {
+  step4DanceSelect.innerHTML = "";
+  for (let second = 1; second <= 10; second++) {
+    const option = document.createElement("option");
+    option.value = String(second);
+    option.textContent = `${second} second${second === 1 ? "" : "s"}`;
+    if (second === step4DanceSeconds) option.selected = true;
+    step4DanceSelect.appendChild(option);
+  }
+}
+
+fillTimerSelect(p1SecondsDisplay, p1DelaySeconds, true);
+fillTimerSelect(p2SecondsDisplay, p2DelaySeconds, true);
+fillTimerSelect(p3SecondsDisplay, p3DelaySeconds, true);
+fillP4TimerSelect();
+fillWeightSelect(p1WeightSelect, p1Weight);
+fillWeightSelect(p2WeightSelect, p2Weight);
+fillWeightSelect(p3WeightSelect, p3Weight);
+fillStep4DanceSelect();
+fillTimerSelect(p1DelaySelect, p1DelaySeconds);
+fillTimerSelect(p2DelaySelect, p2DelaySeconds);
+fillTimerSelect(p3DelaySelect, p3DelaySeconds);
+
+let speechStartTimer = null;
+let speechQueue = [];
+let speechBusy = false;
+const voiceAssignments = {p1:"", p2:"", p3:""};
+
+function availableEnglishVoices() {
+  if (!("speechSynthesis" in window)) return [];
+  const voices = speechSynthesis.getVoices();
+  const english = voices.filter(
+    voice => voice.lang && voice.lang.toLowerCase().startsWith("en")
+  );
+  return english.length ? english : voices;
+}
+
+function assignDifferentDefaultVoices(voices) {
+  if (!voices.length) return;
+  const femalePattern = /female|samantha|victoria|karen|moira|tessa|fiona|zira|aria|jenny|susan|hazel|linda/i;
+  const malePattern = /male|daniel|david|alex|fred|tom|guy|mark|george|james|aaron|arthur|andrew|brian|christopher|eric|liam|matthew|oliver|rishi|ryan|thomas|william/i;
+  const p1Voice = voices.find(voice => femalePattern.test(voice.name)) || voices[0];
+  const p2Voice = voices.find(
+    voice => voice.name !== p1Voice.name && malePattern.test(voice.name)
+  ) || voices.find(voice => voice.name !== p1Voice.name) || p1Voice;
+  const p3Voice = voices.find(
+    voice => voice.name !== p1Voice.name && voice.name !== p2Voice.name
+  ) || voices.find(voice => voice.name !== p1Voice.name) || p1Voice;
+
+  if (!voiceAssignments.p1) voiceAssignments.p1 = p1Voice.name;
+  if (!voiceAssignments.p2) voiceAssignments.p2 = p2Voice.name;
+  if (!voiceAssignments.p3) voiceAssignments.p3 = p3Voice.name;
+}
+
+function populateVoiceSelectors() {
+  const voices = availableEnglishVoices();
+  if (!voices.length) return;
+  assignDifferentDefaultVoices(voices);
+
+  for (const [group, select] of [
+    ["p1",p1VoiceSelect],["p2",p2VoiceSelect],["p3",p3VoiceSelect]
+  ]) {
+    select.innerHTML = "";
+    for (const voice of voices) {
+      const option = document.createElement("option");
+      option.value = voice.name;
+      option.textContent = `${voice.name} (${voice.lang})`;
+      if (voice.name === voiceAssignments[group]) option.selected = true;
+      select.appendChild(option);
+    }
+  }
+}
+
+function getVoice(group = "p1") {
+  const voices = availableEnglishVoices();
+  return voices.find(voice => voice.name === voiceAssignments[group]) || voices[0];
+}
+
+function processSpeechQueue() {
+  if (!soundOn || speechBusy || speechQueue.length === 0 || !("speechSynthesis" in window)) return;
+
+  speechBusy = true;
+  const entry = speechQueue.shift();
+  const energeticEnding = excitementLevel >= 7 && !/[!?]$/.test(entry.text) ? "!" : "";
+  const utterance = new SpeechSynthesisUtterance(`${entry.text}${energeticEnding}`);
+  utterance.lang = "en-US";
+  const excitementRateBoost = 0.92 + excitementLevel * 0.028;
+  utterance.rate = Math.max(
+    0.1,
+    Math.min(2, (speechSpeedPercent / 100) * excitementRateBoost)
+  );
+  const pitchByGroup = {p1:1.35, p2:0.88, p3:0.72};
+  const excitementPitchBoost = 0.96 + excitementLevel * 0.012;
+  utterance.pitch = Math.min(
+    2,
+    (pitchByGroup[entry.group] || 1.0) * excitementPitchBoost
+  );
+  utterance.volume = 1;
+
+  const preferred = getVoice(entry.group);
+  if (preferred) {
+    utterance.voice = preferred;
+    utterance.lang = preferred.lang;
+  }
+
+  utterance.onend = utterance.onerror = () => {
+    speechBusy = false;
+    processSpeechQueue();
+  };
+
+  speechSynthesis.speak(utterance);
+}
+
+function queueSpeech(items) {
+  if (!soundOn || !("speechSynthesis" in window)) return;
+  const cleanItems = items
+    .filter(Boolean)
+    .map(item => typeof item === "string"
+      ? {text:item, group:currentGroup || "p1"}
+      : item
+    );
+  if (!cleanItems.length) return;
+
+  speechQueue.push(...cleanItems);
+  processSpeechQueue();
+}
+
+function clearSpeechQueue() {
+  speechQueue = [];
+  speechBusy = false;
+  clearTimeout(speechStartTimer);
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+}
+
+function speak(text) {
+  queueSpeech([text]);
+}
+
+for (const [group, select] of [
+  ["p1",p1VoiceSelect],["p2",p2VoiceSelect],["p3",p3VoiceSelect]
+]) {
+  select.addEventListener("change", event => {
+    voiceAssignments[group] = event.target.value;
+  });
+}
+speechSpeedSelect.addEventListener("change", event => {
+  speechSpeedPercent = Number(event.target.value);
+});
+excitementSelect.addEventListener("change", event => {
+  excitementLevel = Number(event.target.value);
+});
+populateVoiceSelectors();
+if ("speechSynthesis" in window) {
+  speechSynthesis.addEventListener("voiceschanged", populateVoiceSelectors);
+}
+
+function updateTimeDisplay() {
+  delaySeconds = p1DelaySeconds;
+  updateAllTimerDisplays();
+}
+
+
+
+function setActivePrompt(type) {
+  if (type === "p2" || type === "p3") type = "p1";
+  activePrompt = type;
+
+  p1SecondsDisplay.classList.toggle("active-timer", type === "p1");
+  p2SecondsDisplay.classList.toggle("active-timer", type === "p2");
+  p3SecondsDisplay.classList.toggle("active-timer", type === "p3");
+  p4SecondsDisplay.classList.toggle("active-timer", type === "p4");
+}
+
+function updatePromptVisibility() {
+  p1Btn.classList.toggle("active", p1Visible);
+  p2Btn.classList.toggle("active", p2Visible);
+  p3Btn.classList.toggle("active", p3Visible);
+  p4Btn.classList.toggle("active", p4Active);
+
+  p1PromptDisplay.classList.toggle("hidden", !p1Visible);
+  p2PromptDisplay.classList.toggle("hidden", !p2Visible);
+  p3PromptDisplay.classList.toggle("hidden", !p3Visible);
+}
+
+function promptElement(type) {
+  if (type === "p1") return p1PromptDisplay;
+  if (type === "p2") return p2PromptDisplay;
+  return p3PromptDisplay;
+}
+
+function promptIsEnabled(type) {
+  if (type === "p1") return p1Visible;
+  if (type === "p2") return p2Visible;
+  return p3Visible;
+}
+
+function clearP4HideTimer(type) {
+  clearTimeout(p4HideTimers[type]);
+  p4HideTimers[type] = null;
+}
+
+function revealPromptForP4(type) {
+  const element = promptElement(type);
+  clearP4HideTimer(type);
+  element.classList.remove("prompt-expired");
+
+  if (!p4Active || !promptIsEnabled(type)) return;
+  p4HideTimers[type] = setTimeout(() => {
+    element.classList.add("prompt-expired");
+  }, p4DisplaySeconds * 1000);
+}
+
+function setP4Active(enabled) {
+  p4Active = enabled;
+  updatePromptVisibility();
+  refreshCurrentOrWaiting();
+}
+
+function togglePromptLayer(type) {
+  if (type === "p1") p1Visible = !p1Visible;
+  if (type === "p2") p2Visible = !p2Visible;
+  if (type === "p3") p3Visible = !p3Visible;
+
+  setActivePrompt(type);
+  updatePromptVisibility();
+  const currentStillActive =
+    (currentGroup === "p1" && p1Visible) ||
+    (currentGroup === "p2" && p2Visible) ||
+    (currentGroup === "p3" && p3Visible);
+  resetWeightScores();
+  if (!currentStillActive) currentGroup = chooseNextWeightedGroup();
+  refreshFullOrWaiting();
+}
+
+function setSelectValueIncludingCustom(select, value, compact = false) {
+  const stringValue = String(value);
+  const existing = [...select.options].find(option => option.value === stringValue);
+
+  [...select.options]
+    .filter(option => option.dataset.custom === "true")
+    .forEach(option => option.remove());
+
+  if (!existing) {
+    const option = document.createElement("option");
+    option.value = stringValue;
+    option.textContent = compact
+      ? `${value} s`
+      : `${value} second${value === 1 ? "" : "s"}`;
+    option.dataset.custom = "true";
+
+    const options = [...select.options];
+    const next = options.find(item => Number(item.value) > value);
+    if (next) select.insertBefore(option, next);
+    else select.appendChild(option);
+  }
+
+  select.value = stringValue;
+}
+
+function syncTimerSelects() {
+  setSelectValueIncludingCustom(p1SecondsDisplay, p1DelaySeconds, true);
+  setSelectValueIncludingCustom(p2SecondsDisplay, p2DelaySeconds, true);
+  setSelectValueIncludingCustom(p3SecondsDisplay, p3DelaySeconds, true);
+  setSelectValueIncludingCustom(p1DelaySelect, p1DelaySeconds, false);
+  setSelectValueIncludingCustom(p2DelaySelect, p2DelaySeconds, false);
+  setSelectValueIncludingCustom(p3DelaySelect, p3DelaySeconds, false);
+  p4SecondsDisplay.value = String(p4DisplaySeconds);
+}
+
+function updateAllTimerDisplays() {
+  syncTimerSelects();
+}
+
+function showP2Prompt() {
+  const item = p2Prompts[p2Index % p2Prompts.length];
+  p2PromptText.textContent = `${item.emoji} ${item.text}`;
+  p2PromptDisplay.style.setProperty("--layer-color", item.color);
+  p2PromptDisplay.style.setProperty("--layer-bg", item.bg);
+  p2PromptDisplay.style.setProperty("--layer-border", item.border);
+  revealPromptForP4("p2");
+}
+
+function showP2PromptItem(item) {
+  p2PromptText.textContent = `${item.emoji} ${item.text}`;
+  p2PromptDisplay.style.setProperty("--layer-color", item.color);
+}
+
+function showP3Prompt() {
+  const item = p3Prompts[p3Index % p3Prompts.length];
+  p3PromptText.textContent = `${item.emoji} ${item.text}`;
+  p3PromptDisplay.style.setProperty("--layer-color", item.color);
+  p3PromptDisplay.style.setProperty("--layer-bg", item.bg);
+  p3PromptDisplay.style.setProperty("--layer-border", item.border);
+  revealPromptForP4("p3");
+}
+
+function currentP2Speech() {
+  if (!p2Visible) return null;
+  const item = p2Prompts[p2Index % p2Prompts.length];
+  return item.text;
+}
+
+function currentP3Speech() {
+  if (!p3Visible) return null;
+  const item = p3Prompts[p3Index % p3Prompts.length];
+  return item.text;
+}
+
+function announceVisiblePrompts(includeP1 = true, includeP2 = true, includeP3 = true) {
+  const items = [];
+  if (includeP1 && p1Visible) items.push(sets[setIndex][cardIndex].verb);
+  if (includeP2) items.push(currentP2Speech());
+  if (includeP3) items.push(currentP3Speech());
+  queueSpeech(items);
+}
+
+
+function restartP2Timer() {
+  clearTimeout(p2Timer);
+  clearTimeout(p2WindowEndTimer);
+}
+
+function restartP3Timer() {
+  clearTimeout(p3Timer);
+}
+
+function activeWeightedGroups() {
+  if (cardIndex === 3 && p1Visible) {
+    return [{type:"p1", weight:100}];
+  }
+  const groups = [];
+  if (p1Visible) groups.push({type:"p1", weight:p1Weight});
+  if (p2Visible) groups.push({type:"p2", weight:p2Weight});
+  if (p3Visible) groups.push({type:"p3", weight:p3Weight});
+  return groups;
+}
+
+function chooseNextWeightedGroup() {
+  const groups = activeWeightedGroups();
+  if (!groups.length) return "none";
+
+  const positiveTotal = groups.reduce((sum, group) => sum + group.weight, 0);
+  const total = positiveTotal || groups.length;
+  for (const group of groups) {
+    weightScores[group.type] += positiveTotal ? group.weight : 1;
+  }
+
+  let selected = groups[0];
+  for (const group of groups.slice(1)) {
+    if (weightScores[group.type] > weightScores[selected.type]) selected = group;
+  }
+  weightScores[selected.type] -= total;
+  return selected.type;
+}
+
+function resetWeightScores() {
+  weightScores.p1 = 0;
+  weightScores.p2 = 0;
+  weightScores.p3 = 0;
+}
+
+function promptsUntilNextP1() {
+  if (!p1Visible || p1Weight <= 0) return 1;
+  const groups = [];
+  if (p1Visible) groups.push({type:"p1", weight:p1Weight});
+  if (p2Visible) groups.push({type:"p2", weight:p2Weight});
+  if (p3Visible) groups.push({type:"p3", weight:p3Weight});
+  if (!groups.length) return 1;
+
+  const scores = {...weightScores};
+  const positiveTotal = groups.reduce((sum, group) => sum + group.weight, 0);
+  const total = positiveTotal || groups.length;
+
+  const forcedP2Count = cardIndex === 0 && p2Visible ? 1 : 0;
+  for (let count = 1; count <= 100; count++) {
+    for (const group of groups) {
+      scores[group.type] += positiveTotal ? group.weight : 1;
+    }
+    let selected = groups[0];
+    for (const group of groups.slice(1)) {
+      if (scores[group.type] > scores[selected.type]) selected = group;
+    }
+    scores[selected.type] -= total;
+    if (selected.type === "p1") return forcedP2Count + count;
+  }
+  return 1;
+}
+
+function markTrackerArrival() {
+  const dot = sequenceDots[cardIndex];
+  dot.classList.remove("hit");
+  sequenceEmoji.classList.remove("hit");
+  void sequenceEmoji.offsetWidth;
+  dot.classList.add("hit");
+  sequenceEmoji.classList.add("hit");
+  setTimeout(() => {
+    dot.classList.remove("hit");
+    sequenceEmoji.classList.remove("hit");
+  }, 600);
+}
+
+function startTrackerJourney() {
+  const currentLeft = 12.5 + cardIndex * 25;
+  sequenceEmoji.style.setProperty("--tracker-duration", "0s");
+  sequenceEmoji.style.left = `${currentLeft}%`;
+  markTrackerArrival();
+
+  if (cardIndex === 3 || !playing || !p1Visible || manualEnabled) return;
+  const nextLeft = 12.5 + (cardIndex + 1) * 25;
+  const journeySeconds = promptsUntilNextP1() * p1DelaySeconds;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      sequenceEmoji.style.setProperty("--tracker-duration", `${journeySeconds}s`);
+      sequenceEmoji.style.left = `${nextLeft}%`;
+    });
+  });
+}
+
+function hideAllPromptLayers() {
+  for (const type of ["p1","p2","p3"]) {
+    clearP4HideTimer(type);
+    promptElement(type).classList.add("prompt-expired");
+  }
+}
+
+function stopStep4Dance() {
+  clearTimeout(step4DanceTimer);
+  step4Dance.classList.remove("running");
+  step4Dance.classList.add("hidden");
+}
+
+function startStep4Dance() {
+  stopStep4Dance();
+  const color = step4PongColors[step4PongRun % step4PongColors.length];
+  const isBall = step4PongRun % 2 === 0;
+  step4PongRun++;
+  step4Dance.style.setProperty("--pong-color", color);
+  step4Dance.style.borderRadius = isBall ? "50%" : "10%";
+  step4Dance.style.setProperty("--dance-duration", `${step4DanceSeconds}s`);
+  step4Dance.classList.remove("hidden");
+  void step4Dance.offsetWidth;
+  step4Dance.classList.add("running");
+  step4DanceTimer = setTimeout(stopStep4Dance, step4DanceSeconds * 1000);
+}
+
+function averageP1GapSeconds() {
+  if (!p1Visible || p1Weight <= 0) return p1DelaySeconds;
+  const activeWeights = [
+    p1Visible ? p1Weight : 0,
+    p2Visible ? p2Weight : 0,
+    p3Visible ? p3Weight : 0
+  ];
+  const totalWeight = activeWeights.reduce((sum, weight) => sum + weight, 0);
+  return totalWeight > 0
+    ? p1DelaySeconds * (totalWeight / p1Weight)
+    : p1DelaySeconds;
+}
+
+function prepareManualPrompt() {
+  clearTimeout(manualReadyTimer);
+  clearTimeout(manualEndTimer);
+  if (!manualEnabled || !playing) return;
+
+  manualAdvanceReady = false;
+  manualReadyTimer = setTimeout(() => {
+    manualAdvanceReady = true;
+  }, p4DisplaySeconds * 1000);
+
+  if (oneTimeMode && currentGroup === "p1" && cardIndex === 3) {
+    manualEndTimer = setTimeout(
+      stopOneTimePlay,
+      Math.max(step4DanceSeconds, p4DisplaySeconds) * 1000
+    );
+  }
+}
+
+function renderSequencePhase(announce = true) {
+  hideAllPromptLayers();
+  stopStep4Dance();
+  const oneTimeEnding =
+    oneTimeMode && currentGroup === "p1" && cardIndex === 3;
+  progressTrack.classList.toggle(
+    "hidden",
+    !showProgress || oneTimeEnding || manualEnabled
+  );
+
+  let spokenText = null;
+  if (currentGroup === "p1" && p1Visible) {
+    p1PromptDisplay.classList.remove("prompt-expired");
+    revealPromptForP4("p1");
+    spokenText = sets[setIndex][cardIndex].verb;
+    if (cardIndex === 3) startStep4Dance();
+  } else if (currentGroup === "p2" && p2Visible) {
+    const p2Items = p1Visible
+      ? p2Prompts
+      : [...p2Prompts, {text:"Emotion", emoji:"💓", color:"#76e6ff"}];
+    const p2Item = p2Items[p2Index % p2Items.length];
+    showP2PromptItem(p2Item);
+    p2PromptDisplay.classList.remove("prompt-expired");
+    revealPromptForP4("p2");
+    spokenText = p2Item.text;
+  } else if (currentGroup === "p3" && p3Visible) {
+    showP3Prompt();
+    p3PromptDisplay.classList.remove("prompt-expired");
+    revealPromptForP4("p3");
+    spokenText = p3Prompts[p3Index % p3Prompts.length].text;
+  }
+
+  currentPhaseDurationSeconds = oneTimeEnding
+    ? Math.max(step4DanceSeconds, p4DisplaySeconds)
+    : currentGroup === "p1" && cardIndex === 3
+      ? averageP1GapSeconds()
+      : p1DelaySeconds;
+  if (announce && spokenText) {
+    queueSpeech([{text:spokenText, group:currentGroup}]);
+  }
+  prepareManualPrompt();
+}
+
+function advanceCardData() {
+  if (cardIndex < 3) {
+    cardIndex++;
+  } else {
+    cardIndex = 0;
+    if (continuous) setIndex = (setIndex + 1) % sets.length;
+  }
+}
+
+function advanceSequencePhase() {
+  if (oneTimeMode && currentGroup === "p1" && cardIndex === 3) {
+    stopOneTimePlay();
+    return;
+  }
+  const forceP2AfterFirstEmotion =
+    currentGroup === "p1" && cardIndex === 0 && p2Visible;
+
+  if (currentGroup === "p1") {
+    advanceP1WhenShown = true;
+  } else if (currentGroup === "p2") {
+    const p2Count = p1Visible ? p2Prompts.length : p2Prompts.length + 1;
+    p2Index = (p2Index + 1) % p2Count;
+  } else if (currentGroup === "p3") {
+    p3Index = (p3Index + 1) % p3Prompts.length;
+  }
+
+  currentGroup = forceP2AfterFirstEmotion
+    ? "p2"
+    : chooseNextWeightedGroup();
+  render(true);
+}
+
+function render(announce = true) {
+  if (currentGroup === "p1" && advanceP1WhenShown) {
+    advanceCardData();
+    advanceP1WhenShown = false;
+  }
+  recordPromptState();
+  const item = sets[setIndex][cardIndex];
+  const color = colors[cardIndex];
+
+  verbDisplay.textContent = item.verb;
+  verbDisplay.style.color = color;
+  goalDisplay.innerHTML = `<span class="goal-label">Story direction</span>${item.goal}`;
+  if (categoryDisplay) {
+    categoryDisplay.textContent = item.category;
+    categoryDisplay.style.color = color;
+  }
+  progressBar.style.background = color;
+  statusDisplay.textContent = `Set ${setIndex + 1} · ${cardIndex + 1}/4`;
+  sequenceEmoji.textContent = setEmojis[setIndex % setEmojis.length];
+  if (currentGroup === "p1") startTrackerJourney();
+  updatePromptVisibility();
+  renderSequencePhase(announce);
+  restartTimer();
+}
+
+function nextCard() {
+  if (cardIndex < 3) {
+    cardIndex++;
+  } else {
+    cardIndex = 0;
+    if (continuous) setIndex = (setIndex + 1) % sets.length;
+  }
+  if (cardIndex === 3 && p1Visible) currentGroup = "p1";
+  advanceP1WhenShown = false;
+  sequencePhaseIndex = 0;
+  render(true);
+}
+
+function currentPromptState() {
+  return {
+    setIndex,
+    cardIndex,
+    currentGroup,
+    p2Index,
+    p3Index,
+    advanceP1WhenShown
+  };
+}
+
+function samePromptState(a, b) {
+  return a && b &&
+    a.setIndex === b.setIndex &&
+    a.cardIndex === b.cardIndex &&
+    a.currentGroup === b.currentGroup &&
+    a.p2Index === b.p2Index &&
+    a.p3Index === b.p3Index &&
+    a.advanceP1WhenShown === b.advanceP1WhenShown;
+}
+
+function recordPromptState() {
+  if (restoringPromptHistory) return;
+  const state = currentPromptState();
+  if (samePromptState(promptHistory[promptHistoryIndex], state)) return;
+  if (promptHistoryIndex < promptHistory.length - 1) {
+    promptHistory = promptHistory.slice(0, promptHistoryIndex + 1);
+  }
+  promptHistory.push(state);
+  if (promptHistory.length > 100) promptHistory.shift();
+  promptHistoryIndex = promptHistory.length - 1;
+}
+
+function restorePromptState(state) {
+  if (!state) return;
+  clearTimeout(timer);
+  cancelAnimationFrame(animationFrame);
+  Object.keys(p4HideTimers).forEach(clearP4HideTimer);
+  setIndex = state.setIndex;
+  cardIndex = state.cardIndex;
+  currentGroup = state.currentGroup;
+  p2Index = state.p2Index;
+  p3Index = state.p3Index;
+  advanceP1WhenShown = state.advanceP1WhenShown;
+  restoringPromptHistory = true;
+  render(true);
+  restoringPromptHistory = false;
+}
+
+function nextPrompt() {
+  if (!playing) {
+    if (midlinePaused) resumeFromMidline();
+    else startSelectedPlayback(false);
+    return;
+  }
+  if (manualEnabled) {
+    advanceManualPrompt();
+    return;
+  }
+  if (promptHistoryIndex < promptHistory.length - 1) {
+    promptHistoryIndex++;
+    restorePromptState(promptHistory[promptHistoryIndex]);
+  } else {
+    advanceSequencePhase();
+  }
+}
+
+function previousPrompt() {
+  if (!playing) {
+    if (midlinePaused) resumeFromMidline();
+    else startSelectedPlayback(false);
+    return;
+  }
+  if (promptHistoryIndex > 0) {
+    promptHistoryIndex--;
+    restorePromptState(promptHistory[promptHistoryIndex]);
+  } else {
+    previousCard();
+  }
+}
+
+function previousCard() {
+  if (cardIndex > 0) {
+    cardIndex--;
+  } else {
+    if (continuous) setIndex = (setIndex - 1 + sets.length) % sets.length;
+    cardIndex = 3;
+  }
+  if (cardIndex === 3 && p1Visible) currentGroup = "p1";
+  advanceP1WhenShown = false;
+  sequencePhaseIndex = 0;
+  render(true);
+}
+
+function newSet() {
+  startSelectedPlayback(true);
+}
+
+function updatePlaybackButtons() {
+  const oneTimeRunning = oneTimeMode && playing;
+  oneTimeBtn.classList.toggle("active", oneTimeEnabled);
+  oneTimeBtn.classList.toggle("slow-burning", oneTimeRunning);
+  oneTimeBtn.classList.toggle("dimmed", !oneTimeEnabled);
+
+  playBtn.textContent = midlinePaused ? "Paused" : playing ? "Playing" : "Play";
+  playBtn.classList.toggle("slow-burning", playing);
+  playBtn.classList.toggle("dimmed", !playing);
+
+  manualBtn.classList.toggle("active", manualEnabled);
+  manualBtn.classList.toggle("dimmed", !manualEnabled);
+}
+
+function showEmptyWaitingScreen() {
+  hideAllPromptLayers();
+  stopStep4Dance();
+  progressBar.style.width = "0%";
+  progressTrack.classList.add("hidden");
+  sequenceEmoji.classList.add("hidden");
+  updatePlaybackButtons();
+}
+
+function refreshCurrentOrWaiting() {
+  if (playing) {
+    renderSequencePhase(false);
+    restartTimer();
+  } else if (!midlinePaused) {
+    showEmptyWaitingScreen();
+  }
+}
+
+function refreshFullOrWaiting() {
+  if (playing) render(false);
+  else if (!midlinePaused) showEmptyWaitingScreen();
+}
+
+function stopOneTimePlay() {
+  oneTimeMode = false;
+  playing = false;
+  midlinePaused = false;
+  awaitingStart = true;
+  advanceSetOnStart = true;
+  clearTimeout(timer);
+  clearTimeout(manualReadyTimer);
+  clearTimeout(manualEndTimer);
+  cancelAnimationFrame(animationFrame);
+  Object.keys(p4HideTimers).forEach(clearP4HideTimer);
+  clearSpeechQueue();
+  showEmptyWaitingScreen();
+}
+
+function startSelectedPlayback(forceNewSet = false) {
+  if (forceNewSet || advanceSetOnStart) {
+    setIndex = (setIndex + 1) % sets.length;
+  }
+  advanceSetOnStart = false;
+  awaitingStart = false;
+  oneTimeMode = oneTimeEnabled;
+  playing = true;
+  midlinePaused = false;
+  cardIndex = 0;
+  currentGroup = "p1";
+  advanceP1WhenShown = false;
+  resetWeightScores();
+  promptHistory = [];
+  promptHistoryIndex = -1;
+  sequenceEmoji.classList.remove("hidden");
+  updatePlaybackButtons();
+  render(true);
+}
+
+function toggleOneTimeMode() {
+  oneTimeEnabled = !oneTimeEnabled;
+  if (!oneTimeEnabled) oneTimeMode = false;
+  else if (playing) oneTimeMode = true;
+  updatePlaybackButtons();
+}
+
+function toggleManualMode() {
+  manualEnabled = !manualEnabled;
+  manualAdvanceReady = false;
+  clearTimeout(timer);
+  cancelAnimationFrame(animationFrame);
+  updatePlaybackButtons();
+  if (playing) {
+    renderSequencePhase(false);
+    if (!manualEnabled) restartTimer();
+  } else {
+    showEmptyWaitingScreen();
+  }
+}
+
+function advanceManualPrompt() {
+  if (!manualEnabled || !playing || !manualAdvanceReady) return;
+  manualAdvanceReady = false;
+  advanceSequencePhase();
+}
+
+function restartTimer() {
+  clearTimeout(timer);
+  cancelAnimationFrame(animationFrame);
+  progressBar.style.width = "0%";
+
+  if (!playing || manualEnabled) {
+    progressBar.style.width = "0%";
+    return;
+  }
+
+  delaySeconds = currentPhaseDurationSeconds;
+  startedAt = performance.now();
+  timer = setTimeout(advanceSequencePhase, delaySeconds * 1000);
+  animateProgress();
+}
+
+function animateProgress() {
+  const duration = delaySeconds * 1000;
+
+  function frame(now) {
+    if (!playing) return;
+    const progress = Math.min(1, (now - startedAt) / duration);
+    progressBar.style.width = `${progress * 100}%`;
+    animationFrame = requestAnimationFrame(frame);
+  }
+
+  animationFrame = requestAnimationFrame(frame);
+}
+
+function togglePlay() {
+  if (midlinePaused) {
+    resumeFromMidline();
+    return;
+  }
+  if (!playing) {
+    startSelectedPlayback(false);
+    return;
+  }
+  oneTimeMode = false;
+  playing = false;
+  midlinePaused = false;
+  awaitingStart = true;
+  advanceSetOnStart = false;
+  clearTimeout(timer);
+  clearTimeout(manualReadyTimer);
+  clearTimeout(manualEndTimer);
+  cancelAnimationFrame(animationFrame);
+  Object.keys(p4HideTimers).forEach(clearP4HideTimer);
+  clearSpeechQueue();
+  showEmptyWaitingScreen();
+}
+
+function pauseFromMidline() {
+  if (!playing) return;
+  playing = false;
+  midlinePaused = true;
+  clearTimeout(timer);
+  clearTimeout(manualReadyTimer);
+  clearTimeout(manualEndTimer);
+  cancelAnimationFrame(animationFrame);
+  Object.keys(p4HideTimers).forEach(clearP4HideTimer);
+  clearSpeechQueue();
+  updatePlaybackButtons();
+}
+
+function resumeFromMidline() {
+  if (!midlinePaused) return;
+  midlinePaused = false;
+  playing = true;
+  updatePlaybackButtons();
+  renderSequencePhase(false);
+  restartTimer();
+}
+
+function toggleMidlinePlayPause() {
+  if (midlinePaused) resumeFromMidline();
+  else if (playing) pauseFromMidline();
+  else startSelectedPlayback(false);
+}
+
+function handleMiddlePointerUp(event) {
+  if (event.pointerType === "mouse" && event.button !== 0) return;
+  event.preventDefault();
+  event.stopPropagation();
+  const now = Date.now();
+  if (now - lastMiddleTapAt <= 340) {
+    clearTimeout(middleTapTimer);
+    middleTapTimer = null;
+    lastMiddleTapAt = 0;
+    newSet();
+    return;
+  }
+  lastMiddleTapAt = now;
+  clearTimeout(middleTapTimer);
+  middleTapTimer = setTimeout(() => {
+    lastMiddleTapAt = 0;
+    middleTapTimer = null;
+    toggleMidlinePlayPause();
+  }, 360);
+}
+
+function setSound(enabled, announce = false) {
+  soundOn = enabled;
+  soundBtn.textContent = `Sound: ${soundOn ? "On" : "Off"}`;
+  soundBtn.classList.toggle("active", soundOn);
+  soundToggle.checked = soundOn;
+
+  if (!soundOn && "speechSynthesis" in window) {
+    speechSynthesis.cancel();
+  } else if (soundOn && announce) {
+    renderSequencePhase(true);
+  }
+}
+
+function changeDelay(amount) {
+  if (activePrompt === "p1") {
+    p1DelaySeconds = Math.min(120, Math.max(1, p1DelaySeconds + amount));
+    delaySeconds = p1DelaySeconds;
+  } else if (activePrompt === "p2") {
+    p2DelaySeconds = Math.min(120, Math.max(1, p2DelaySeconds + amount));
+  } else if (activePrompt === "p3") {
+    p3DelaySeconds = Math.min(120, Math.max(1, p3DelaySeconds + amount));
+  } else {
+    const currentIndex = p4TimerOptions.indexOf(p4DisplaySeconds);
+    const direction = amount < 0 ? -1 : 1;
+    const nextIndex = Math.min(
+      p4TimerOptions.length - 1,
+      Math.max(0, currentIndex + direction)
+    );
+    p4DisplaySeconds = p4TimerOptions[nextIndex];
+  }
+
+  syncTimerSelects();
+  refreshCurrentOrWaiting();
+}
+
+function openSettings() {
+  settingsModal.classList.add("open");
+  settingsModal.setAttribute("aria-hidden", "false");
+}
+
+function closeSettings() {
+  settingsModal.classList.remove("open");
+  settingsModal.setAttribute("aria-hidden", "true");
+  refreshCurrentOrWaiting();
+}
+
+function bindTap(id, handler) {
+  const element = document.getElementById(id);
+  element.addEventListener("click", event => {
+    event.preventDefault();
+    event.stopPropagation();
+    handler();
+  });
+}
+
+bindTap("playBtn", togglePlay);
+bindTap("oneTimeBtn", toggleOneTimeMode);
+bindTap("manualBtn", toggleManualMode);
+bindTap("newBtn", newSet);
+bindTap("soundBtn", () => setSound(!soundOn, true));
+bindTap("p1Btn", () => togglePromptLayer("p1"));
+bindTap("p2Btn", () => togglePromptLayer("p2"));
+bindTap("p3Btn", () => togglePromptLayer("p3"));
+bindTap("p4Btn", () => {
+  setActivePrompt("p4");
+  setP4Active(!p4Active);
+});
+bindTap("minusBtn", () => changeDelay(-1));
+bindTap("plusBtn", () => changeDelay(1));
+bindTap("settingsBtn", openSettings);
+bindTap("prevZone", () => {
+  previousPrompt();
+});
+bindTap("nextZone", () => {
+  nextPrompt();
+});
+document.getElementById("midZone").addEventListener("pointerup", handleMiddlePointerUp);
+document.getElementById("midZone").addEventListener("keydown", event => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleMidlinePlayPause();
+  }
+});
+
+p1SecondsDisplay.addEventListener("pointerdown", () => setActivePrompt("p1"));
+p2SecondsDisplay.addEventListener("pointerdown", () => setActivePrompt("p2"));
+p3SecondsDisplay.addEventListener("pointerdown", () => setActivePrompt("p3"));
+p4SecondsDisplay.addEventListener("pointerdown", () => setActivePrompt("p4"));
+
+p1SecondsDisplay.addEventListener("change", event => {
+  setActivePrompt("p1");
+  p1DelaySeconds = Number(event.target.value);
+  delaySeconds = p1DelaySeconds;
+  updateAllTimerDisplays();
+  refreshCurrentOrWaiting();
+});
+
+p2SecondsDisplay.addEventListener("change", event => {
+  setActivePrompt("p2");
+  p2DelaySeconds = Number(event.target.value);
+  updateAllTimerDisplays();
+  restartP2Timer();
+});
+
+p3SecondsDisplay.addEventListener("change", event => {
+  setActivePrompt("p3");
+  p3DelaySeconds = Number(event.target.value);
+  updateAllTimerDisplays();
+  refreshCurrentOrWaiting();
+});
+
+p4SecondsDisplay.addEventListener("change", event => {
+  setActivePrompt("p4");
+  p4DisplaySeconds = Number(event.target.value);
+  refreshCurrentOrWaiting();
+});
+
+function applyWeightChanges() {
+  p1Weight = Number(p1WeightSelect.value);
+  p2Weight = Number(p2WeightSelect.value);
+  p3Weight = Number(p3WeightSelect.value);
+  resetWeightScores();
+  currentGroup = chooseNextWeightedGroup();
+  refreshFullOrWaiting();
+}
+
+p1WeightSelect.addEventListener("change", applyWeightChanges);
+p2WeightSelect.addEventListener("change", applyWeightChanges);
+p3WeightSelect.addEventListener("change", applyWeightChanges);
+
+step4DanceSelect.addEventListener("change", event => {
+  step4DanceSeconds = Number(event.target.value);
+  if (currentGroup === "p1" && cardIndex === 3) startStep4Dance();
+});
+
+p1DelaySelect.addEventListener("change", event => {
+  p1DelaySeconds = Number(event.target.value);
+  delaySeconds = p1DelaySeconds;
+  updateAllTimerDisplays();
+  refreshCurrentOrWaiting();
+});
+
+p2DelaySelect.addEventListener("change", event => {
+  p2DelaySeconds = Number(event.target.value);
+  updateAllTimerDisplays();
+  restartP2Timer();
+});
+
+p3DelaySelect.addEventListener("change", event => {
+  p3DelaySeconds = Number(event.target.value);
+  updateAllTimerDisplays();
+  refreshCurrentOrWaiting();
+});
+
+document.getElementById("progressToggle").addEventListener("change", event => {
+  showProgress = event.target.checked;
+  progressTrack.classList.toggle(
+    "hidden",
+    !showProgress || !playing || manualEnabled
+  );
+});
+
+document.getElementById("detailsToggle").addEventListener("change", event => {
+  showDetails = event.target.checked;
+  goalDisplay.classList.toggle("hidden", !showDetails);
+  if (categoryDisplay) categoryDisplay.classList.toggle("hidden", !showDetails);
+});
+
+settingsModal.addEventListener("pointerdown", event => {
+  if (event.target === settingsModal) closeSettings();
+});
+
+document.querySelector(".app").addEventListener("click", event => {
+  if (!event.target.closest("button,select,input,label,.modal")) {
+    if (!playing) startSelectedPlayback(false);
+    else if (manualEnabled) advanceManualPrompt();
+  }
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "ArrowLeft") {
+    event.preventDefault();
+    if (!playing) startSelectedPlayback(false);
+    else if (manualEnabled) advanceManualPrompt();
+    else previousCard();
+  } else if (event.key === "ArrowRight" || event.key === " ") {
+    event.preventDefault();
+    if (!playing) startSelectedPlayback(false);
+    else if (manualEnabled) advanceManualPrompt();
+    else nextCard();
+  } else if (event.key.toLowerCase() === "s") {
+    setSound(!soundOn, true);
+  } else if (event.key.toLowerCase() === "p") {
+    togglePlay();
+  } else if (event.key === "Escape") {
+    closeSettings();
+  }
+});
+
+updateTimeDisplay();
+setActivePrompt("p1");
+setSound(false, false);
+goalDisplay.classList.add("hidden");
+updatePromptVisibility();
+showEmptyWaitingScreen();
+restartP2Timer();
+restartP3Timer();
+</script>
+</body>
+</html>
