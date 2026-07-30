@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>HASH-41</title>
+<title>HASH-45</title>
 <style>
 :root{
   --red:#ef4444;
@@ -25,6 +25,14 @@ body{
   justify-content:center;
   align-items:flex-start;
   padding:9px;
+}
+body.double-size{
+  display:block;
+  overflow:auto;
+}
+body.double-size .app{
+  zoom:2;
+  margin:0 auto;
 }
 .app{
   width:min(100%,520px);
@@ -49,7 +57,7 @@ header{
   gap:5px;
 }
 .prompt-row{
-  grid-template-columns:repeat(10,minmax(0,1fr));
+  grid-template-columns:repeat(11,minmax(0,1fr));
 }
 .main-play{
   grid-column:span 2;
@@ -101,7 +109,7 @@ header{
   text-align-last:center;
 }
 .utility-row{
-  grid-template-columns:1fr auto;
+  grid-template-columns:1fr auto auto auto auto auto;
 }
 .status-line{
   min-height:36px;
@@ -361,6 +369,19 @@ button.dimmed{
   right:6%;
   text-align:right;
 }
+#p5PromptDisplay{
+  position:absolute;
+  left:50%;
+  bottom:8%;
+  width:min(90%,720px);
+  transform:translateX(-50%);
+  color:#67e8f9;
+  font-size:clamp(25px,5.5vw,48px);
+  font-weight:950;
+  letter-spacing:.025em;
+  text-align:center;
+  text-shadow:0 0 18px rgba(34,211,238,.42);
+}
 .category{display:none!important}
 .hidden{display:none!important}
 .prompt-expired{visibility:hidden!important}
@@ -416,6 +437,81 @@ button.dimmed{
   background:#111827;
 }
 .panel h2{margin:0 0 12px}
+.clue-panel{
+  width:min(100%,520px);
+  max-height:82dvh;
+}
+.clue-panel p{
+  margin:0 0 12px;
+  color:#94a3b8;
+  font-size:13px;
+}
+.occupation-clues{
+  display:grid;
+  gap:8px;
+  margin:0;
+  padding:0;
+  list-style:none;
+}
+.occupation-clues li{
+  padding:12px 14px;
+  border:1px solid #334155;
+  border-radius:12px;
+  background:#1e293b;
+  color:#e2e8f0;
+  font-size:clamp(16px,2.8vw,20px);
+  line-height:1.25;
+  cursor:pointer;
+}
+.clue-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:0 0 12px;
+}
+.reveal-occupation{
+  flex:0 0 auto;
+  padding:9px 12px;
+  background:#0e7490;
+}
+.revealed-occupation{
+  color:#67e8f9;
+  font-size:clamp(18px,3vw,24px);
+  font-weight:900;
+}
+.directory-panel{
+  width:min(100%,620px);
+}
+.occupation-directory{
+  display:grid;
+  gap:7px;
+}
+.occupation-entry{
+  overflow:hidden;
+  border:1px solid #334155;
+  border-radius:12px;
+  background:#172033;
+}
+.occupation-name{
+  width:100%;
+  border-radius:0;
+  padding:11px 13px;
+  background:#1e293b;
+  text-align:left;
+  font-size:clamp(15px,2.5vw,19px);
+}
+.occupation-name.active{
+  background:#0e7490;
+  font-size:clamp(15px,2.5vw,19px);
+  text-transform:none;
+}
+.occupation-keywords{
+  margin:0;
+  padding:12px 14px;
+  color:#cbd5e1;
+  font-size:15px;
+  line-height:1.45;
+}
 .setting-row{
   display:flex;
   align-items:center;
@@ -451,6 +547,15 @@ button.dimmed{
   button{
     min-height:44px;
     font-size:15px;
+  }
+  .prompt-row{
+    grid-template-columns:repeat(5,minmax(0,1fr));
+  }
+  #sizeBtn{
+    display:none;
+  }
+  .utility-row{
+    grid-template-columns:1fr auto auto auto auto;
   }
   .seconds-select{
     min-height:44px;
@@ -500,6 +605,7 @@ button.dimmed{
       <button id="p2Btn" class="prompt-mode" type="button" aria-label="Toggle prompt two">P2</button>
       <button id="p3Btn" class="prompt-mode" type="button" aria-label="Toggle prompt three">P3</button>
       <button id="p4Btn" class="prompt-mode" type="button" aria-label="Toggle timed prompt display">P4</button>
+      <button id="p5Btn" class="prompt-mode dimmed" type="button" aria-label="Toggle visual occupation prompt">P5</button>
       <button id="soundBtn" type="button" aria-label="Toggle sound">Sound: Off</button>
     </div>
 
@@ -524,6 +630,10 @@ button.dimmed{
 
     <div class="control-row utility-row">
       <div id="statusDisplay" class="status status-line">Set 1 · 1/4</div>
+      <button id="occupationListBtn" type="button" aria-label="Open current occupation clue list">O1</button>
+      <button id="occupationDirectoryBtn" type="button" aria-label="Open all occupations">O2</button>
+      <button id="sizeBtn" type="button" aria-label="Double app size" aria-pressed="false">2×</button>
+      <button id="barBtn" class="dimmed" type="button" aria-label="Toggle bottom moving bar" aria-pressed="false">Bar</button>
       <button id="settingsBtn" type="button" aria-label="Settings">⚙ Settings</button>
     </div>
   </header>
@@ -548,6 +658,7 @@ button.dimmed{
       </div>
       <div id="p2PromptDisplay" class="layer-prompt prompt-layer hidden"><span id="p2PromptText">🎬 Action</span></div>
       <div id="p3PromptDisplay" class="layer-prompt prompt-layer hidden"><span id="p3PromptText">⏸️ Pause</span></div>
+      <div id="p5PromptDisplay" class="prompt-layer hidden prompt-expired"><span id="p5PromptText">Guitar player</span></div>
     </div>
     <div id="step4Dance" class="step4-dance hidden" aria-hidden="true"></div>
     
@@ -579,6 +690,14 @@ button.dimmed{
       <span>Speech sound</span>
       <label class="switch">
         <input id="soundToggle" type="checkbox">
+        On
+      </label>
+    </div>
+
+    <div class="setting-row">
+      <span>P5 occupation prompt</span>
+      <label class="switch">
+        <input id="occupationVisualToggle" type="checkbox">
         On
       </label>
     </div>
@@ -628,7 +747,7 @@ button.dimmed{
     <div class="setting-row">
       <span>Show timer bar</span>
       <label class="switch">
-        <input id="progressToggle" type="checkbox" checked>
+        <input id="progressToggle" type="checkbox">
         On
       </label>
     </div>
@@ -666,6 +785,26 @@ button.dimmed{
       <div id="extraPromptSettings" style="display:grid;grid-template-columns:1fr 1fr;gap:7px"></div>
     </div>
 
+  </section>
+</div>
+
+<div id="occupationListModal" class="modal" aria-hidden="true">
+  <section id="occupationCluePanel" class="panel clue-panel" aria-label="Occupation clues">
+    <h2>Occupation clues</h2>
+    <p>The occupation name is hidden. Tap the list or outside to close.</p>
+    <div class="clue-actions">
+      <button id="revealOccupationBtn" class="reveal-occupation" type="button">Reveal occupation</button>
+      <span id="revealedOccupation" class="revealed-occupation hidden"></span>
+    </div>
+    <ul id="occupationClues" class="occupation-clues"></ul>
+  </section>
+</div>
+
+<div id="occupationDirectoryModal" class="modal" aria-hidden="true">
+  <section class="panel directory-panel" aria-label="All occupations">
+    <h2>All occupations</h2>
+    <p>Tap an occupation to show or hide its keywords. Tap outside to close.</p>
+    <div id="occupationDirectory" class="occupation-directory"></div>
   </section>
 </div>
 
@@ -1400,6 +1539,281 @@ const p3Prompts = [
   {text:"Hashtag", emoji:"#️⃣", color:"#66e2bd", bg:"#0a2e25", border:"#2b8c71"}
 ];
 
+const occupations = [
+  ["Debt collector",["overdue notice","payment plan","final warning","interest charges","repossession","settle the balance"]],
+  ["Barista",["espresso shot","steam the milk","oat or dairy","latte art","to-go cup","extra hot"]],
+  ["Guitar player",["Jimi Hendrix","Eric Clapton","E string","riff and lick","bend the note","fine-tuned","take a solo","join the band","recording","overdub"]],
+  ["Saxophone player",["Charlie Parker","reed and mouthpiece","breath support","blue note","improvise a solo","brass section","jazz club"]],
+  ["Football coach",["half-time talk","formation","training cones","substitution","locker room","play the whistle","team captain"]],
+  ["Baker",["knead the dough","proofing basket","rolling pin","flour everywhere","preheat the oven","golden crust"]],
+  ["Librarian",["Dewey Decimal System","quiet please","return date","library card","reference desk","overdue book"]],
+  ["Surgeon",["scrub in","scalpel","operating theatre","anaesthetic","steady hands","close the incision"]],
+  ["Doctor",["symptoms","stethoscope","diagnosis","prescription","waiting room","take two daily"]],
+  ["Nurse",["check vital signs","hospital rounds","bedside manner","change the dressing","medication chart","night shift"]],
+  ["Dentist",["open wide","dental mirror","cavity","root canal","floss every day","numb the gum"]],
+  ["Veterinarian",["exam table","vaccination","microchip","fur and claws","animal carrier","cone collar"]],
+  ["Pharmacist",["dosage","side effects","prescription counter","generic brand","medicine cabinet","take with food"]],
+  ["Paramedic",["emergency call","sirens","stretcher","oxygen mask","check the pulse","ambulance bay"]],
+  ["Therapist",["safe space","how did that feel","coping strategy","boundaries","reflective listening","weekly session"]],
+  ["Psychologist",["behaviour pattern","cognitive test","research study","attachment style","clinical notes","subconscious"]],
+  ["Chiropractor",["spinal adjustment","posture","treatment table","joint movement","lower back","gentle pressure"]],
+  ["Midwife",["birth plan","contractions","delivery room","breathing rhythm","newborn","umbilical cord"]],
+  ["Optician",["eye chart","which is clearer","frames","contact lenses","astigmatism","adjust the temples"]],
+  ["Physical therapist",["range of motion","resistance band","rehabilitation","stretch slowly","injury recovery","treatment plan"]],
+  ["Teacher",["lesson plan","raise your hand","homework","whiteboard","parent meeting","class dismissed"]],
+  ["Kindergarten teacher",["story circle","finger paint","nap time","building blocks","share the toys","tiny chairs"]],
+  ["Professor",["lecture hall","office hours","research paper","tenure","citation","final examination"]],
+  ["Principal",["school assembly","disciplinary meeting","staff room","parent complaint","school policy","morning announcement"]],
+  ["Driving instructor",["check your mirrors","parallel parking","clutch control","blind spot","indicate first","emergency stop"]],
+  ["Dance teacher",["five six seven eight","point your toes","mirror wall","rehearsal","keep the rhythm","dance recital"]],
+  ["Music teacher",["scales","metronome","sheet music","practice daily","middle C","keep the tempo"]],
+  ["Yoga instructor",["downward dog","breathe deeply","yoga mat","sun salutation","find your balance","namaste"]],
+  ["Personal trainer",["one more rep","warm-up","protein shake","heart rate","proper form","cool down"]],
+  ["Lifeguard",["whistle","rescue tube","deep end","no running","watch the water","CPR"]],
+  ["Police officer",["badge","radio dispatch","patrol car","license and registration","caution tape","write a report"]],
+  ["Detective",["crime scene","follow the clues","interview the suspect","case file","motive","magnifying glass"]],
+  ["Private investigator",["tail the target","hidden camera","confidential client","stakeout","trench coat","private office"]],
+  ["Security guard",["CCTV monitor","night patrol","access badge","restricted area","incident log","check the doors"]],
+  ["Prison guard",["cell block","head count","lockdown","visitor check","keys at the belt","exercise yard"]],
+  ["Judge",["all rise","gavel","objection sustained","courtroom","sentence","order in the court"]],
+  ["Lawyer",["legal brief","client privilege","cross-examination","billable hour","case precedent","closing argument"]],
+  ["Prosecutor",["the state alleges","evidence exhibit","witness stand","burden of proof","plea deal","jury address"]],
+  ["Bailiff",["call the court","escort the witness","court security","jury enters","maintain order","swear the oath"]],
+  ["Court reporter",["stenotype machine","verbatim record","read that back","official transcript","rapid keystrokes","court proceedings"]],
+  ["Firefighter",["fire hose","ladder truck","smoke alarm","protective helmet","break down the door","station bell"]],
+  ["Soldier",["boot camp","salute","marching orders","camouflage","chain of command","field rations"]],
+  ["Navy captain",["bridge","all hands","set a course","ship log","port and starboard","rough seas"]],
+  ["Pilot",["cockpit","runway","cleared for takeoff","altitude","autopilot","final approach"]],
+  ["Flight attendant",["seat belt sign","safety demonstration","aisle cart","turbulence","overhead locker","cabin doors"]],
+  ["Air traffic controller",["control tower","radar screen","holding pattern","flight path","cleared to land","radio frequency"]],
+  ["Train conductor",["all aboard","ticket please","platform","next station","signal failure","departure whistle"]],
+  ["Bus driver",["next stop","exact fare","rear door","rush hour","bus lane","last route"]],
+  ["Taxi driver",["meter running","airport pickup","shortcut","back seat","traffic jam","where to"]],
+  ["Truck driver",["long haul","loading dock","rest stop","cargo manifest","CB radio","delivery deadline"]],
+  ["Delivery courier",["signature required","doorbell","package scan","wrong address","delivery route","fragile label"]],
+  ["Bicycle messenger",["rush delivery","bike lane","document pouch","city traffic","lock the bike","deadline"]],
+  ["Ship captain",["anchor","navigation chart","crew quarters","storm warning","full speed ahead","harbour master"]],
+  ["Sailor",["tie the knot","swab the deck","sea legs","mast and sail","shore leave","watch duty"]],
+  ["Fisher",["bait the hook","fishing net","morning catch","tide table","fish market","stormy water"]],
+  ["Farmer",["tractor","harvest","barn","plant the seed","weather forecast","muddy boots"]],
+  ["Gardener",["pruning shears","flower bed","watering can","pull the weeds","compost","green fingers"]],
+  ["Florist",["bouquet","roses and lilies","ribbon","wedding order","trim the stems","flower cooler"]],
+  ["Zookeeper",["feeding time","enclosure","visitor barrier","exotic animal","clean the habitat","escape drill"]],
+  ["Dog trainer",["sit and stay","treat pouch","leash","good dog","obedience class","heel"]],
+  ["Pet groomer",["clippers","shampoo","trim the nails","fur dryer","tangled coat","ribbon collar"]],
+  ["Bee-keeper",["hive","smoker","honeycomb","queen bee","protective veil","swarm"]],
+  ["Park ranger",["trail map","campfire rules","wildlife warning","visitor centre","hiking patrol","leave no trace"]],
+  ["Wildlife photographer",["telephoto lens","hide quietly","golden hour","rare sighting","camera trap","wait for the shot"]],
+  ["Marine biologist",["coral reef","specimen","research vessel","ocean current","dive survey","marine ecosystem"]],
+  ["Archaeologist",["excavation site","ancient pottery","carbon dating","small brush","buried ruins","field notes"]],
+  ["Geologist",["rock sample","fault line","mineral layer","field hammer","tectonic plate","erosion"]],
+  ["Astronomer",["telescope","constellation","light-year","observatory","distant galaxy","night sky"]],
+  ["Scientist",["hypothesis","control group","experiment","lab coat","publish the results","peer review"]],
+  ["Lab technician",["test tube","sample label","centrifuge","sterile gloves","microscope","record the result"]],
+  ["Meteorologist",["weather map","low-pressure front","rainfall","satellite image","forecast model","storm warning"]],
+  ["Engineer",["blueprint","load calculation","prototype","safety margin","technical drawing","solve the failure"]],
+  ["Architect",["floor plan","scale model","building permit","glass facade","client revision","structural column"]],
+  ["Construction worker",["hard hat","building site","cement mixer","scaffolding","measure twice","safety vest"]],
+  ["Carpenter",["saw and hammer","wood grain","spirit level","custom cabinet","sand the edge","measure twice"]],
+  ["Electrician",["circuit breaker","live wire","voltage tester","fuse box","power outage","switch it off first"]],
+  ["Plumber",["leaking pipe","wrench","blocked drain","water pressure","under the sink","turn off the main valve"]],
+  ["Welder",["protective mask","sparks","metal seam","welding torch","steel frame","heat-resistant gloves"]],
+  ["Mechanic",["under the hood","oil change","spark plug","engine noise","diagnostic tool","test drive"]],
+  ["Auto body painter",["spray booth","colour match","primer","sand the panel","clear coat","paint mask"]],
+  ["Roofer",["roof tiles","ladder","gutter","weatherproofing","safety harness","leak after rain"]],
+  ["Locksmith",["key blank","lock pick","deadbolt","locked out","key cutting","security cylinder"]],
+  ["Chimney sweep",["soot","roof brush","fireplace","chimney flue","top hat","Mary Poppins"]],
+  ["Window cleaner",["squeegee","soap bucket","high ladder","streak-free glass","shopfront","safety rope"]],
+  ["House painter",["paint roller","drop cloth","masking tape","second coat","colour swatch","wet paint"]],
+  ["Interior designer",["mood board","fabric sample","accent wall","lighting plan","room layout","client taste"]],
+  ["Real estate agent",["open house","asking price","location location location","mortgage approval","property viewing","sign here"]],
+  ["Property manager",["tenant complaint","rent due","maintenance request","key inventory","lease renewal","building inspection"]],
+  ["Hotel manager",["guest complaint","room upgrade","occupancy rate","front desk","five-star service","late checkout"]],
+  ["Receptionist",["welcome desk","appointment book","please hold","visitor badge","incoming call","sign-in sheet"]],
+  ["Bellhop",["luggage trolley","room key","hotel lobby","tip","carry the bags","enjoy your stay"]],
+  ["Housekeeper",["fresh towels","turn down the bed","room checklist","cleaning cart","do not disturb","lost property"]],
+  ["Janitor",["mop bucket","master key","boiler room","wet floor sign","night shift","maintenance closet"]],
+  ["Cleaner",["rubber gloves","vacuum","stain remover","dust the shelf","cleaning spray","before and after"]],
+  ["Garbage collector",["early route","wheelie bin","recycling","garbage truck","heavy bags","collection day"]],
+  ["Exterminator",["pest trap","protective suit","infestation","seal the cracks","spray treatment","follow-up visit"]],
+  ["Chef",["mise en place","sharp knife","taste the sauce","dinner rush","special of the day","send the plate"]],
+  ["Sous-chef",["prep station","yes chef","service timing","inventory","cover the pass","kitchen brigade"]],
+  ["Waiter",["today's special","table for two","order pad","tip","check please","carry the tray"]],
+  ["Bartender",["shaken or stirred","last call","bar tab","cocktail shaker","house special","ice and lime"]],
+  ["Sommelier",["wine list","bouquet","vintage","swirl the glass","food pairing","corked bottle"]],
+  ["Butcher",["cutting block","cleaver","prime cut","weigh the order","sausage links","wrap in paper"]],
+  ["Fishmonger",["catch of the day","ice display","fillet knife","fresh scales","weigh the fish","market stall"]],
+  ["Grocery cashier",["barcode scanner","loyalty card","paper or plastic","receipt","checkout line","price check"]],
+  ["Shopkeeper",["open sign","cash register","regular customer","window display","stockroom","closing time"]],
+  ["Fashion designer",["runway","sketchbook","fabric drape","season collection","fitting model","Paris fashion week"]],
+  ["Tailor",["measuring tape","pin the hem","fitting room","sewing machine","custom suit","take in the waist"]],
+  ["Shoemaker",["leather last","sole and heel","polish","repair stitch","shoe size","cobbler's bench"]],
+  ["Hairdresser",["wash and cut","blow-dry","fringe","colour treatment","salon chair","just a trim"]],
+  ["Barber",["clippers","straight razor","fade","hot towel","barber chair","trim the beard"]],
+  ["Makeup artist",["foundation","brush kit","contour","backstage mirror","touch-up","camera-ready"]],
+  ["Tattoo artist",["stencil","ink needle","tattoo chair","aftercare","sleeve design","hold still"]],
+  ["Nail technician",["manicure","gel polish","cuticle","colour chart","UV lamp","nail art"]],
+  ["Massage therapist",["massage table","deep tissue","essential oil","tight shoulders","relax your breathing","pressure point"]],
+  ["Photographer",["camera lens","say cheese","shutter speed","portrait session","edit the exposure","golden hour"]],
+  ["Wedding planner",["guest list","venue","seating chart","bouquet timing","last-minute crisis","walk down the aisle"]],
+  ["Event planner",["rundown","venue booking","catering","guest badges","sound check","contingency plan"]],
+  ["DJ",["turntables","beat match","dance floor","cue the track","bass drop","take requests"]],
+  ["Record producer",["control room","mixing desk","another take","arrangement","master track","studio session"]],
+  ["Singer",["microphone","vocal warm-up","hit the high note","chorus","encore","protect the voice"]],
+  ["Drummer",["drumsticks","kick and snare","count it in","fill","keep the groove","cymbal crash"]],
+  ["Violinist",["bow","strings","chin rest","vibrato","concert hall","tune to A"]],
+  ["Pianist",["black and white keys","middle C","pedal","chord progression","concert grand","sight-read"]],
+  ["Orchestra conductor",["baton","downbeat","string section","tempo","rehearsal","grand finale"]],
+  ["Actor",["audition","script","motivation","hit your mark","opening night","Oscar"]],
+  ["Director",["action","cut","camera angle","another take","storyboard","final scene"]],
+  ["Stage manager",["cue lights","prompt book","places please","headset","backstage","curtain up"]],
+  ["Playwright",["first draft","stage directions","dialogue","character arc","rewrite the ending","opening night"]],
+  ["Stand-up comedian",["punchline","open mic","heckler","tight five","callback","read the room"]],
+  ["Magician",["sleight of hand","hidden compartment","pick a card","top hat","misdirection","grand illusion"]],
+  ["Circus ringmaster",["ladies and gentlemen","big top","spotlight","centre ring","introduce the act","crack of the whip"]],
+  ["Clown",["red nose","oversized shoes","balloon animal","slapstick","tiny car","sad face"]],
+  ["Acrobat",["trapeze","safety net","balance","aerial twist","chalked hands","circus tent"]],
+  ["Dancer",["choreography","rehearsal mirror","costume","rhythm","stage position","final pose"]],
+  ["Choreographer",["eight-count","formation","movement phrase","clean the routine","dance captain","stage picture"]],
+  ["Puppeteer",["strings","hand puppet","hidden behind the stage","character voice","puppet theatre","move the mouth"]],
+  ["Voice actor",["recording booth","character voice","microphone pop shield","another take","animation","match the lip movement"]],
+  ["Radio host",["on air","studio microphone","call-in listener","traffic update","commercial break","morning show"]],
+  ["News anchor",["breaking news","teleprompter","live studio","correspondent","camera one","good evening"]],
+  ["Journalist",["deadline","interview","source","press pass","front page","fact-check"]],
+  ["Sports commentator",["play-by-play","instant replay","what a finish","press box","scoreboard","back to the studio"]],
+  ["Camera operator",["focus pull","camera rig","frame the shot","pan left","battery change","rolling"]],
+  ["Film editor",["timeline","cutaway","continuity","rough cut","transition","export the final"]],
+  ["Sound engineer",["mixing console","microphone level","feedback","soundcheck","equalizer","monitor mix"]],
+  ["Lighting technician",["spotlight","lighting rig","colour gel","dim the stage","cue sheet","blackout"]],
+  ["Costume designer",["wardrobe rack","period clothing","fitting","fabric swatch","quick change","character silhouette"]],
+  ["Art curator",["gallery wall","exhibition theme","artist statement","private viewing","collection","museum label"]],
+  ["Museum guide",["please follow me","ancient exhibit","do not touch","audio tour","next gallery","closing time"]],
+  ["Tour guide",["on your left","meeting point","historic district","group photo","local legend","follow the umbrella"]],
+  ["Travel agent",["round trip","hotel package","passport details","window seat","travel insurance","booking confirmation"]],
+  ["Translator",["source text","exact meaning","false friend","deadline","footnote","localize the phrase"]],
+  ["Interpreter",["headset","speak in short sentences","simultaneous translation","conference booth","repeat that","language pair"]],
+  ["Writer",["blank page","first draft","character","writer's block","edit the chapter","publisher deadline"]],
+  ["Poet",["metaphor","rhyme","spoken word","stanza","open notebook","poetry reading"]],
+  ["Editor",["track changes","cut this paragraph","style guide","proof copy","deadline","final approval"]],
+  ["Publisher",["book proposal","print run","royalties","cover design","launch date","bestseller list"]],
+  ["Graphic designer",["font choice","colour palette","logo draft","layout grid","client revision","export the file"]],
+  ["Illustrator",["sketchbook","ink line","character drawing","colour layer","book cover","creative brief"]],
+  ["Animator",["keyframe","storyboard","motion cycle","render","frame by frame","character rig"]],
+  ["Video game designer",["game level","player reward","boss battle","playtest","game mechanics","respawn point"]],
+  ["Software developer",["bug report","write the code","version control","deploy","debugging","coffee and keyboard"]],
+  ["IT support technician",["have you restarted","password reset","help desk ticket","remote access","network cable","system update"]],
+  ["Cybersecurity analyst",["firewall","suspicious login","data breach","encryption","phishing email","incident response"]],
+  ["Data analyst",["spreadsheet","dashboard","trend line","clean the data","query","present the findings"]],
+  ["Accountant",["balance sheet","tax return","receipt","debit and credit","fiscal year","audit trail"]],
+  ["Auditor",["compliance check","supporting document","financial control","sample transaction","discrepancy","final report"]],
+  ["Banker",["loan application","interest rate","account balance","vault","credit check","sign the form"]],
+  ["Stockbroker",["buy or sell","market opening","portfolio","share price","trading floor","bull and bear"]],
+  ["Insurance agent",["policy","premium","claim form","risk assessment","deductible","fine print"]],
+  ["Financial adviser",["retirement plan","investment risk","budget","diversify","long-term goal","client portfolio"]],
+  ["Entrepreneur",["startup pitch","investor","business plan","cash flow","prototype","scale the company"]],
+  ["Salesperson",["limited offer","customer need","commission","close the deal","product demo","follow-up call"]],
+  ["Marketing manager",["target audience","campaign","brand message","market research","engagement","launch strategy"]],
+  ["Advertising copywriter",["headline","tagline","creative brief","call to action","brand voice","deadline"]],
+  ["Human resources manager",["employee handbook","performance review","workplace policy","staff complaint","benefits","exit interview"]],
+  ["Recruiter",["job opening","candidate interview","résumé","reference check","salary range","offer letter"]],
+  ["Office manager",["meeting room","supply order","staff calendar","broken printer","visitor access","office policy"]],
+  ["Secretary",["take a message","calendar","meeting minutes","filing cabinet","appointment","confidential letter"]],
+  ["Postal worker",["sorting room","stamp","delivery route","registered mail","mailbag","wrong postcode"]],
+  ["Politician",["campaign speech","voter","debate","policy promise","press conference","election night"]],
+  ["Mayor",["city hall","ribbon cutting","local council","public meeting","town budget","ceremonial chain"]],
+  ["Diplomat",["embassy","negotiation","official reception","confidential cable","international agreement","protocol"]],
+  ["Social worker",["case file","home visit","support plan","community service","safeguarding","client meeting"]],
+  ["Priest",["sermon","church bell","confession","altar","Sunday service","blessing"]],
+  ["Rabbi",["Torah","synagogue","Shabbat","sermon","community counsel","Hebrew prayer"]],
+  ["Imam",["mosque","prayer time","Quran","Friday sermon","community guidance","call to prayer"]],
+  ["Funeral director",["memorial service","coffin","bereaved family","flower arrangement","hearse","quiet dignity"]],
+  ["Gravedigger",["shovel","cemetery","headstone","earth pile","early fog","six feet"]],
+  ["Wedding officiant",["dearly beloved","vows","rings","ceremony script","you may kiss","marriage certificate"]],
+  ["Nanny",["school pickup","snack time","bedtime story","playground","family schedule","emergency contact"]],
+  ["Babysitter",["parents' instructions","pizza delivery","bedtime","toy box","check-in text","kids still awake"]],
+  ["Caregiver",["daily routine","medication reminder","mobility support","meal preparation","companionship","care plan"]],
+  ["Crossing guard",["stop sign","school crossing","reflective vest","wait at the curb","morning traffic","safe to cross"]],
+  ["Referee",["whistle","yellow card","foul","play on","score sheet","final decision"]],
+  ["Football player",["boots","goal","locker room","team jersey","penalty kick","crowd roar"]],
+  ["Tennis coach",["serve","backhand","ball basket","follow through","baseline","match point"]],
+  ["Ski instructor",["snowplough","ski lift","goggles","bend your knees","beginner slope","fresh powder"]],
+  ["Swimming instructor",["kickboard","float on your back","deep breath","pool lane","water safety","one more length"]],
+  ["Casino dealer",["shuffle the cards","place your bets","roulette wheel","blackjack","poker chips","the house wins"]],
+  ["Fortune teller",["crystal ball","tarot card","palm line","mysterious future","candlelight","I see a journey"]],
+  ["Animal keeper",["feeding schedule","habitat gate","clean the enclosure","protective gloves","animal behaviour","visitor safety"]],
+  ["Asparagus harvester",["early spring","cut below the soil","long green spears","harvest basket","field rows","fresh bunches"]],
+  ["Astronaut",["space suit","zero gravity","mission control","airlock","orbit","moon landing"]],
+  ["Auctioneer",["going once","going twice","sold","auction paddle","reserve price","rapid-fire bidding"]],
+  ["Barkeeper",["pull a pint","bar towel","regular customer","last orders","bar snacks","close the tab"]],
+  ["Beautician",["facial treatment","skin care","beauty salon","waxing","cosmetic products","appointment mirror"]],
+  ["Biologist",["living organisms","field sample","microscope","ecosystem","research notes","species classification"]],
+  ["Bookseller",["new release","bookshop window","recommend a novel","cash counter","signed edition","shelf display"]],
+  ["Bouncer",["guest list","velvet rope","ID check","nightclub door","dress code","not tonight"]],
+  ["Boxer",["boxing gloves","heavy bag","corner stool","jab and hook","mouth guard","final bell"]],
+  ["Bricklayer",["mortar","spirit level","brick course","trowel","scaffolding","straight wall"]],
+  ["Call-centre agent",["headset","call queue","customer account","scripted greeting","hold music","escalate the complaint"]],
+  ["Cameraman / Camerawoman",["shoulder camera","frame the shot","focus","camera rolling","news crew","battery pack"]],
+  ["Captain",["crew orders","navigation","ship's bridge","logbook","all hands","take command"]],
+  ["Cemetery gardener",["headstones","quiet paths","trim the hedges","memorial flowers","fallen leaves","watering can"]],
+  ["Chancellor",["government office","official statement","cabinet meeting","state budget","parliament","national address"]],
+  ["Chemist",["chemical formula","laboratory flask","reaction","safety goggles","periodic table","measure the compound"]],
+  ["Chorister",["choir robe","vocal harmony","sheet music","rehearsal","church acoustics","follow the conductor"]],
+  ["Circus artist / Equilibrist",["high wire","balance pole","big top","spotlight","safety net","hold the pose"]],
+  ["Coder",["source code","debug","keyboard shortcut","software bug","commit changes","run the program"]],
+  ["Comedy author",["comic premise","punchline","rewrite","character flaw","callback","funny ending"]],
+  ["Composer",["musical score","melody","harmony","orchestration","manuscript paper","premiere"]],
+  ["Computer scientist",["algorithm","data structure","research paper","machine learning","complexity","computer model"]],
+  ["Concrete worker",["cement mixer","wet concrete","formwork","level the surface","reinforcement bar","curing time"]],
+  ["Conductor",["ticket punch","departure time","passenger carriage","platform signal","all aboard","route timetable"]],
+  ["Creative director",["campaign concept","mood board","creative team","brand vision","approve the design","client presentation"]],
+  ["Diet counsellor",["meal plan","nutrition diary","portion size","food habits","balanced diet","follow-up session"]],
+  ["Disc jockey",["turntable","headphones","beat matching","request list","dance floor","mix into the next track"]],
+  ["Doorkeeper",["entrance key","visitor check","hold the door","guest arrival","restricted access","closing time"]],
+  ["Dressmaker",["dress pattern","fabric roll","fitting pins","sewing machine","take the measurements","hemline"]],
+  ["Educator",["learning objective","group activity","explain the concept","assessment","teaching material","student progress"]],
+  ["Energy consultant",["energy audit","insulation","heating costs","solar panels","efficiency report","reduce consumption"]],
+  ["Estate agent",["property listing","viewing appointment","asking price","house keys","buyer offer","location"]],
+  ["Event manager",["venue schedule","supplier call","guest list","running order","last-minute problem","event day"]],
+  ["Geriatric nurse",["elder care","medication round","mobility support","patient dignity","care home","night observation"]],
+  ["Goldsmith",["precious metal","tiny hammer","jewellery bench","gold setting","polishing wheel","custom ring"]],
+  ["Headhunter",["executive search","candidate shortlist","confidential vacancy","industry contact","salary negotiation","recruitment call"]],
+  ["High school teacher",["teenage class","subject lesson","examination","homework deadline","staff meeting","graduation"]],
+  ["Housewife / Househusband",["household schedule","laundry basket","family meals","school run","grocery list","home budget"]],
+  ["Hunter",["camouflage","tracking prints","hunting season","rifle scope","forest hide","wait quietly"]],
+  ["Ice-cream vendor",["waffle cone","scoop","sprinkles","freezer cart","summer queue","which flavour"]],
+  ["Jazz musician",["blue note","swing rhythm","jam session","improvised solo","jazz club","count it in"]],
+  ["Legal expert",["statute","case precedent","legal opinion","contract clause","court ruling","interpret the law"]],
+  ["Mail carrier",["mailbag","delivery route","letter box","registered letter","postal van","wrong address"]],
+  ["Market researcher",["focus group","customer survey","sample size","consumer trend","questionnaire","present the findings"]],
+  ["Marriage counsellor",["couple session","communication pattern","relationship conflict","listen to each other","shared goals","home exercise"]],
+  ["Masseur",["massage oil","treatment table","tight muscles","deep pressure","relax","shoulder tension"]],
+  ["Minister of defense",["security briefing","armed forces","defence policy","cabinet meeting","military budget","national threat"]],
+  ["Model",["photo shoot","catwalk","pose","fashion fitting","portfolio","camera flash"]],
+  ["Mountaineer",["climbing rope","summit","ice axe","base camp","altitude","weather window"]],
+  ["Obstetrician",["prenatal check","ultrasound","delivery room","pregnancy","foetal heartbeat","birth plan"]],
+  ["Optician / Optometrist",["eye examination","lens prescription","vision chart","frames","which is clearer","contact lenses"]],
+  ["Painter",["canvas","paintbrush","colour palette","easel","studio light","gallery opening"]],
+  ["Pathologist",["tissue sample","microscope slide","laboratory report","biopsy","cause of disease","clinical findings"]],
+  ["Physician",["medical history","physical examination","diagnosis","treatment plan","stethoscope","patient rounds"]],
+  ["Physicist",["equation","particle","experiment","quantum theory","laboratory","laws of motion"]],
+  ["Piano maker",["soundboard","wooden case","hammer mechanism","tune the strings","keyboard action","concert grand"]],
+  ["Prompter",["script copy","whisper the line","stage wing","actor forgets","cue light","follow the performance"]],
+  ["Psephologist",["opinion poll","voting pattern","constituency","election data","swing voter","forecast the result"]],
+  ["Santa",["red suit","reindeer","chimney","gift list","North Pole","ho ho ho"]],
+  ["Shepherd",["flock","sheepdog","pasture","crook","count the sheep","lambing season"]],
+  ["Shipbuilder",["dry dock","steel hull","welding plan","launch day","shipyard crane","sea trial"]],
+  ["Soccer referee",["whistle","yellow card","offside","penalty area","play advantage","final whistle"]],
+  ["Speechwriter",["key message","opening line","applause point","political tone","rewrite the ending","teleprompter"]],
+  ["Sports instructor",["warm-up","demonstrate the technique","training group","safety rules","practice drill","cool down"]],
+  ["Stonemason",["stone block","chisel","mortar joint","carved detail","building restoration","dusty workshop"]],
+  ["Stuntman",["safety harness","fight fall","car chase","crash mat","action scene","one take"]],
+  ["Swimming pool attendant",["pool rules","changing room","chlorine check","lost towel","lane schedule","closing whistle"]],
+  ["Track welder",["rail joint","welding torch","track maintenance","protective visor","night repair","train delay"]],
+  ["Train driver",["driver's cab","signal aspect","brake control","rail timetable","station approach","departure buzzer"]],
+  ["Violin maker",["maple wood","curved bridge","sound post","varnish","fine carving","test the tone"]],
+  ["Watchmaker",["tiny gears","magnifying loupe","watch spring","repair bench","delicate hands","set the time"]]
+];
+
 const timerOptions = [1,2,3,5,8,10,15,30,40,50,60,90,120];
 const p4TimerOptions = [0.5,1,1.4,1.5,2,2.5,3,5,10,15];
 
@@ -1426,12 +1840,19 @@ let p1Visible = true;
 let p2Visible = true;
 let p3Visible = true;
 let p4Active = true;
+let occupationVisualOn = false;
+let occupationShownForSet = false;
+let occupationSpokenForSet = false;
+let occupationRevealTimer = null;
+let currentOccupationIndex = -1;
+let occupationOrder = [];
+let occupationOrderPosition = -1;
 let p2Index = 0;
 let p3Index = 0;
 let p2Timer = null;
 let p2WindowEndTimer = null;
 let p3Timer = null;
-const p4HideTimers = {p1:null, p2:null, p3:null};
+const p4HideTimers = {p1:null, p2:null, p3:null, p5:null};
 let sequencePhaseIndex = 0;
 let currentPhaseDurationSeconds = p1DelaySeconds;
 
@@ -1452,7 +1873,7 @@ let manualAdvanceReady = false;
 let manualReadyTimer = null;
 let manualEndTimer = null;
 let continuous = true;
-let showProgress = true;
+let showProgress = false;
 let showDetails = false;
 let timer = null;
 let animationFrame = null;
@@ -1462,6 +1883,7 @@ let promptHistoryIndex = -1;
 let restoringPromptHistory = false;
 let middleTapTimer = null;
 let lastMiddleTapAt = 0;
+let doubleSize = false;
 
 const verbDisplay = document.getElementById("verbDisplay");
 const goalDisplay = document.getElementById("goalDisplay");
@@ -1483,6 +1905,7 @@ const p1PromptDisplay = document.getElementById("p1PromptDisplay");
 const p2Btn = document.getElementById("p2Btn");
 const p3Btn = document.getElementById("p3Btn");
 const p4Btn = document.getElementById("p4Btn");
+const p5Btn = document.getElementById("p5Btn");
 const p1SecondsDisplay = document.getElementById("p1SecondsDisplay");
 const p2SecondsDisplay = document.getElementById("p2SecondsDisplay");
 const p3SecondsDisplay = document.getElementById("p3SecondsDisplay");
@@ -1504,6 +1927,19 @@ const p2PromptDisplay = document.getElementById("p2PromptDisplay");
 const p2PromptText = document.getElementById("p2PromptText");
 const p3PromptDisplay = document.getElementById("p3PromptDisplay");
 const p3PromptText = document.getElementById("p3PromptText");
+const p5PromptDisplay = document.getElementById("p5PromptDisplay");
+const p5PromptText = document.getElementById("p5PromptText");
+const occupationVisualToggle = document.getElementById("occupationVisualToggle");
+const occupationListModal = document.getElementById("occupationListModal");
+const occupationCluePanel = document.getElementById("occupationCluePanel");
+const occupationClues = document.getElementById("occupationClues");
+const revealOccupationBtn = document.getElementById("revealOccupationBtn");
+const revealedOccupation = document.getElementById("revealedOccupation");
+const occupationDirectoryModal = document.getElementById("occupationDirectoryModal");
+const occupationDirectory = document.getElementById("occupationDirectory");
+const sizeBtn = document.getElementById("sizeBtn");
+const barBtn = document.getElementById("barBtn");
+const progressToggle = document.getElementById("progressToggle");
 
 const timeOptions = timerOptions;
 
@@ -1636,7 +2072,7 @@ function processSpeechQueue() {
     0.1,
     Math.min(2, (speechSpeedPercent / 100) * excitementRateBoost)
   );
-  const pitchByGroup = {p1:1.35, p2:0.88, p3:0.72};
+  const pitchByGroup = {p1:1.35, p2:0.88, p3:0.72, p5:1.0};
   const excitementPitchBoost = 0.96 + excitementLevel * 0.012;
   utterance.pitch = Math.min(
     2,
@@ -1723,21 +2159,26 @@ function updatePromptVisibility() {
   p2Btn.classList.toggle("active", p2Visible);
   p3Btn.classList.toggle("active", p3Visible);
   p4Btn.classList.toggle("active", p4Active);
+  p5Btn.classList.toggle("active", occupationVisualOn);
+  p5Btn.classList.toggle("dimmed", !occupationVisualOn);
 
   p1PromptDisplay.classList.toggle("hidden", !p1Visible);
   p2PromptDisplay.classList.toggle("hidden", !p2Visible);
   p3PromptDisplay.classList.toggle("hidden", !p3Visible);
+  p5PromptDisplay.classList.toggle("hidden", !occupationVisualOn);
 }
 
 function promptElement(type) {
   if (type === "p1") return p1PromptDisplay;
   if (type === "p2") return p2PromptDisplay;
+  if (type === "p5") return p5PromptDisplay;
   return p3PromptDisplay;
 }
 
 function promptIsEnabled(type) {
   if (type === "p1") return p1Visible;
   if (type === "p2") return p2Visible;
+  if (type === "p5") return occupationVisualOn;
   return p3Visible;
 }
 
@@ -1755,6 +2196,178 @@ function revealPromptForP4(type) {
   p4HideTimers[type] = setTimeout(() => {
     element.classList.add("prompt-expired");
   }, p4DisplaySeconds * 1000);
+}
+
+function scheduleOccupationOverlay() {
+  clearTimeout(occupationRevealTimer);
+  clearP4HideTimer("p5");
+  p5PromptDisplay.classList.add("prompt-expired");
+  const occupation = currentOccupation();
+  if (!occupation) return;
+  p5PromptText.textContent = occupation[0];
+  occupationRevealTimer = setTimeout(() => {
+    if (!playing ||
+        !occupationVisualOn ||
+        currentGroup !== "p1" ||
+        cardIndex !== 0) return;
+    p5PromptDisplay.classList.remove("prompt-expired");
+    p4HideTimers.p5 = setTimeout(() => {
+      p5PromptDisplay.classList.add("prompt-expired");
+    }, p4DisplaySeconds * 1000);
+  }, 500);
+}
+
+function refillOccupationOrder() {
+  occupationOrder = occupations.map((_, index) => index);
+  for (let index = occupationOrder.length - 1; index > 0; index--) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [occupationOrder[index], occupationOrder[swapIndex]] =
+      [occupationOrder[swapIndex], occupationOrder[index]];
+  }
+  occupationOrderPosition = -1;
+}
+
+function chooseNewOccupation() {
+  if (!occupationOrder.length ||
+      occupationOrderPosition >= occupationOrder.length - 1) {
+    refillOccupationOrder();
+  }
+  occupationOrderPosition++;
+  currentOccupationIndex = occupationOrder[occupationOrderPosition];
+  occupationShownForSet = false;
+  occupationSpokenForSet = false;
+}
+
+function currentOccupation() {
+  return occupations[currentOccupationIndex] || null;
+}
+
+function renderOccupationClues() {
+  occupationClues.innerHTML = "";
+  const occupation = currentOccupation();
+  const clues = occupation
+    ? occupation[1]
+    : ["Start a set to select an occupation"];
+  for (const clue of clues) {
+    const item = document.createElement("li");
+    item.textContent = clue;
+    item.tabIndex = 0;
+    item.addEventListener("click", closeOccupationList);
+    item.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        closeOccupationList();
+      }
+    });
+    occupationClues.appendChild(item);
+  }
+}
+
+function openOccupationList() {
+  renderOccupationClues();
+  revealedOccupation.textContent = "";
+  revealedOccupation.classList.add("hidden");
+  revealOccupationBtn.textContent = "Reveal occupation";
+  occupationListModal.classList.add("open");
+  occupationListModal.setAttribute("aria-hidden", "false");
+}
+
+function closeOccupationList() {
+  occupationListModal.classList.remove("open");
+  occupationListModal.setAttribute("aria-hidden", "true");
+}
+
+function revealCurrentOccupation() {
+  const occupation = currentOccupation();
+  revealedOccupation.textContent = occupation
+    ? occupation[0]
+    : "Start a set first";
+  revealedOccupation.classList.remove("hidden");
+  revealOccupationBtn.textContent = "Revealed";
+}
+
+function renderOccupationDirectory() {
+  occupationDirectory.innerHTML = "";
+  const alphabetical = occupations
+    .map((occupation, index) => ({occupation, index}))
+    .sort((a, b) => a.occupation[0].localeCompare(b.occupation[0]));
+
+  for (const {occupation} of alphabetical) {
+    const entry = document.createElement("article");
+    entry.className = "occupation-entry";
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "occupation-name";
+    button.textContent = occupation[0];
+    button.setAttribute("aria-expanded", "false");
+
+    const keywords = document.createElement("p");
+    keywords.className = "occupation-keywords hidden";
+    keywords.textContent = occupation[1].join(" · ");
+
+    button.addEventListener("click", event => {
+      event.preventDefault();
+      event.stopPropagation();
+      const opening = keywords.classList.contains("hidden");
+      keywords.classList.toggle("hidden", !opening);
+      button.classList.toggle("active", opening);
+      button.setAttribute("aria-expanded", String(opening));
+    });
+
+    keywords.addEventListener("click", event => {
+      event.stopPropagation();
+    });
+
+    entry.append(button, keywords);
+    occupationDirectory.appendChild(entry);
+  }
+}
+
+function openOccupationDirectory() {
+  renderOccupationDirectory();
+  occupationDirectoryModal.classList.add("open");
+  occupationDirectoryModal.setAttribute("aria-hidden", "false");
+}
+
+function closeOccupationDirectory() {
+  occupationDirectoryModal.classList.remove("open");
+  occupationDirectoryModal.setAttribute("aria-hidden", "true");
+}
+
+function toggleDoubleSize() {
+  doubleSize = !doubleSize;
+  document.body.classList.toggle("double-size", doubleSize);
+  sizeBtn.textContent = doubleSize ? "1×" : "2×";
+  sizeBtn.classList.toggle("active", doubleSize);
+  sizeBtn.setAttribute("aria-pressed", String(doubleSize));
+  sizeBtn.setAttribute(
+    "aria-label",
+    doubleSize ? "Return app to normal size" : "Double app size"
+  );
+  window.scrollTo({top:0, left:0, behavior:"smooth"});
+}
+
+function updateBarButton() {
+  barBtn.classList.toggle("active", showProgress);
+  barBtn.classList.toggle("dimmed", !showProgress);
+  barBtn.setAttribute("aria-pressed", String(showProgress));
+}
+
+function setBarEnabled(enabled) {
+  showProgress = enabled;
+  progressToggle.checked = showProgress;
+  updateBarButton();
+  const oneTimeEnding =
+    oneTimeMode && currentGroup === "p1" && cardIndex === 3;
+  progressTrack.classList.toggle(
+    "hidden",
+    !showProgress || !playing || manualEnabled || oneTimeEnding
+  );
+}
+
+function toggleBar() {
+  setBarEnabled(!showProgress);
 }
 
 function setP4Active(enabled) {
@@ -1777,6 +2390,22 @@ function togglePromptLayer(type) {
   resetWeightScores();
   if (!currentStillActive) currentGroup = chooseNextWeightedGroup();
   refreshFullOrWaiting();
+}
+
+function applyOccupationSettings() {
+  occupationVisualOn = occupationVisualToggle.checked;
+  updatePromptVisibility();
+  if (!occupationVisualOn) {
+    clearTimeout(occupationRevealTimer);
+    clearP4HideTimer("p5");
+    p5PromptDisplay.classList.add("prompt-expired");
+  }
+  refreshCurrentOrWaiting();
+}
+
+function toggleOccupationVisual() {
+  occupationVisualToggle.checked = !occupationVisualToggle.checked;
+  applyOccupationSettings();
 }
 
 function setSelectValueIncludingCustom(select, value, compact = false) {
@@ -1964,7 +2593,8 @@ function startTrackerJourney() {
 }
 
 function hideAllPromptLayers() {
-  for (const type of ["p1","p2","p3"]) {
+  clearTimeout(occupationRevealTimer);
+  for (const type of ["p1","p2","p3","p5"]) {
     clearP4HideTimer(type);
     promptElement(type).classList.add("prompt-expired");
   }
@@ -2031,11 +2661,24 @@ function renderSequencePhase(announce = true) {
     !showProgress || oneTimeEnding || manualEnabled
   );
 
-  let spokenText = null;
+  const spokenItems = [];
   if (currentGroup === "p1" && p1Visible) {
     p1PromptDisplay.classList.remove("prompt-expired");
     revealPromptForP4("p1");
-    spokenText = sets[setIndex][cardIndex].verb;
+    spokenItems.push({
+      text:sets[setIndex][cardIndex].verb,
+      group:"p1"
+    });
+    const occupationDue = cardIndex === 0 && occupationVisualOn;
+    if (occupationDue) {
+      const occupation = currentOccupation();
+      if (!occupationShownForSet) occupationShownForSet = true;
+      scheduleOccupationOverlay();
+      if (announce && soundOn && occupation && !occupationSpokenForSet) {
+        spokenItems.push({text:occupation[0], group:"p5"});
+        occupationSpokenForSet = true;
+      }
+    }
     if (cardIndex === 3) startStep4Dance();
   } else if (currentGroup === "p2" && p2Visible) {
     const p2Items = p1Visible
@@ -2045,12 +2688,15 @@ function renderSequencePhase(announce = true) {
     showP2PromptItem(p2Item);
     p2PromptDisplay.classList.remove("prompt-expired");
     revealPromptForP4("p2");
-    spokenText = p2Item.text;
+    spokenItems.push({text:p2Item.text, group:"p2"});
   } else if (currentGroup === "p3" && p3Visible) {
     showP3Prompt();
     p3PromptDisplay.classList.remove("prompt-expired");
     revealPromptForP4("p3");
-    spokenText = p3Prompts[p3Index % p3Prompts.length].text;
+    spokenItems.push({
+      text:p3Prompts[p3Index % p3Prompts.length].text,
+      group:"p3"
+    });
   }
 
   currentPhaseDurationSeconds = oneTimeEnding
@@ -2058,8 +2704,8 @@ function renderSequencePhase(announce = true) {
     : currentGroup === "p1" && cardIndex === 3
       ? averageP1GapSeconds()
       : p1DelaySeconds;
-  if (announce && spokenText) {
-    queueSpeech([{text:spokenText, group:currentGroup}]);
+  if (announce && spokenItems.length) {
+    queueSpeech(spokenItems);
   }
   prepareManualPrompt();
 }
@@ -2070,6 +2716,7 @@ function advanceCardData() {
   } else {
     cardIndex = 0;
     if (continuous) setIndex = (setIndex + 1) % sets.length;
+    chooseNewOccupation();
   }
 }
 
@@ -2127,6 +2774,7 @@ function nextCard() {
   } else {
     cardIndex = 0;
     if (continuous) setIndex = (setIndex + 1) % sets.length;
+    chooseNewOccupation();
   }
   if (cardIndex === 3 && p1Visible) currentGroup = "p1";
   advanceP1WhenShown = false;
@@ -2141,6 +2789,9 @@ function currentPromptState() {
     currentGroup,
     p2Index,
     p3Index,
+    currentOccupationIndex,
+    occupationShownForSet,
+    occupationSpokenForSet,
     advanceP1WhenShown
   };
 }
@@ -2152,6 +2803,9 @@ function samePromptState(a, b) {
     a.currentGroup === b.currentGroup &&
     a.p2Index === b.p2Index &&
     a.p3Index === b.p3Index &&
+    a.currentOccupationIndex === b.currentOccupationIndex &&
+    a.occupationShownForSet === b.occupationShownForSet &&
+    a.occupationSpokenForSet === b.occupationSpokenForSet &&
     a.advanceP1WhenShown === b.advanceP1WhenShown;
 }
 
@@ -2177,6 +2831,9 @@ function restorePromptState(state) {
   currentGroup = state.currentGroup;
   p2Index = state.p2Index;
   p3Index = state.p3Index;
+  currentOccupationIndex = state.currentOccupationIndex;
+  occupationShownForSet = state.occupationShownForSet;
+  occupationSpokenForSet = state.occupationSpokenForSet;
   advanceP1WhenShown = state.advanceP1WhenShown;
   restoringPromptHistory = true;
   render(true);
@@ -2221,6 +2878,7 @@ function previousCard() {
   } else {
     if (continuous) setIndex = (setIndex - 1 + sets.length) % sets.length;
     cardIndex = 3;
+    chooseNewOccupation();
   }
   if (cardIndex === 3 && p1Visible) currentGroup = "p1";
   advanceP1WhenShown = false;
@@ -2244,6 +2902,7 @@ function updatePlaybackButtons() {
 
   manualBtn.classList.toggle("active", manualEnabled);
   manualBtn.classList.toggle("dimmed", !manualEnabled);
+  updateBarButton();
 }
 
 function showEmptyWaitingScreen() {
@@ -2285,6 +2944,7 @@ function stopOneTimePlay() {
 }
 
 function startSelectedPlayback(forceNewSet = false) {
+  clearSpeechQueue();
   if (forceNewSet || advanceSetOnStart) {
     setIndex = (setIndex + 1) % sets.length;
   }
@@ -2294,9 +2954,10 @@ function startSelectedPlayback(forceNewSet = false) {
   playing = true;
   midlinePaused = false;
   cardIndex = 0;
-  currentGroup = "p1";
   advanceP1WhenShown = false;
+  chooseNewOccupation();
   resetWeightScores();
+  currentGroup = p1Visible ? "p1" : chooseNextWeightedGroup();
   promptHistory = [];
   promptHistoryIndex = -1;
   sequenceEmoji.classList.remove("hidden");
@@ -2499,9 +3160,15 @@ bindTap("p4Btn", () => {
   setActivePrompt("p4");
   setP4Active(!p4Active);
 });
+bindTap("p5Btn", toggleOccupationVisual);
 bindTap("minusBtn", () => changeDelay(-1));
 bindTap("plusBtn", () => changeDelay(1));
 bindTap("settingsBtn", openSettings);
+bindTap("occupationListBtn", openOccupationList);
+bindTap("occupationDirectoryBtn", openOccupationDirectory);
+bindTap("revealOccupationBtn", revealCurrentOccupation);
+bindTap("sizeBtn", toggleDoubleSize);
+bindTap("barBtn", toggleBar);
 bindTap("prevZone", () => {
   previousPrompt();
 });
@@ -2563,6 +3230,8 @@ p1WeightSelect.addEventListener("change", applyWeightChanges);
 p2WeightSelect.addEventListener("change", applyWeightChanges);
 p3WeightSelect.addEventListener("change", applyWeightChanges);
 
+occupationVisualToggle.addEventListener("change", applyOccupationSettings);
+
 step4DanceSelect.addEventListener("change", event => {
   step4DanceSeconds = Number(event.target.value);
   if (currentGroup === "p1" && cardIndex === 3) startStep4Dance();
@@ -2587,12 +3256,8 @@ p3DelaySelect.addEventListener("change", event => {
   refreshCurrentOrWaiting();
 });
 
-document.getElementById("progressToggle").addEventListener("change", event => {
-  showProgress = event.target.checked;
-  progressTrack.classList.toggle(
-    "hidden",
-    !showProgress || !playing || manualEnabled
-  );
+progressToggle.addEventListener("change", event => {
+  setBarEnabled(event.target.checked);
 });
 
 document.getElementById("detailsToggle").addEventListener("change", event => {
@@ -2603,6 +3268,18 @@ document.getElementById("detailsToggle").addEventListener("change", event => {
 
 settingsModal.addEventListener("pointerdown", event => {
   if (event.target === settingsModal) closeSettings();
+});
+
+occupationListModal.addEventListener("pointerdown", event => {
+  if (event.target === occupationListModal) closeOccupationList();
+});
+
+occupationCluePanel.addEventListener("click", event => {
+  if (!event.target.closest("#revealOccupationBtn")) closeOccupationList();
+});
+
+occupationDirectoryModal.addEventListener("pointerdown", event => {
+  if (event.target === occupationDirectoryModal) closeOccupationDirectory();
 });
 
 document.querySelector(".app").addEventListener("click", event => {
@@ -2617,18 +3294,20 @@ document.addEventListener("keydown", event => {
     event.preventDefault();
     if (!playing) startSelectedPlayback(false);
     else if (manualEnabled) advanceManualPrompt();
-    else previousCard();
+    else previousPrompt();
   } else if (event.key === "ArrowRight" || event.key === " ") {
     event.preventDefault();
     if (!playing) startSelectedPlayback(false);
     else if (manualEnabled) advanceManualPrompt();
-    else nextCard();
+    else nextPrompt();
   } else if (event.key.toLowerCase() === "s") {
     setSound(!soundOn, true);
   } else if (event.key.toLowerCase() === "p") {
     togglePlay();
   } else if (event.key === "Escape") {
     closeSettings();
+    closeOccupationList();
+    closeOccupationDirectory();
   }
 });
 
@@ -2637,6 +3316,7 @@ setActivePrompt("p1");
 setSound(false, false);
 goalDisplay.classList.add("hidden");
 updatePromptVisibility();
+setBarEnabled(false);
 showEmptyWaitingScreen();
 restartP2Timer();
 restartP3Timer();
