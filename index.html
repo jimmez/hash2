@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>HASH-45</title>
+<title>HASH-46</title>
 <style>
 :root{
   --red:#ef4444;
   --orange:#f59e0b;
   --blue:#3b82f6;
   --green:#22c55e;
+  --prompt-font-size:clamp(36px,8vw,68px);
 }
 *{box-sizing:border-box}
 html,body{
@@ -298,7 +299,7 @@ button.dimmed{
   padding:0;
 }
 .verb{
-  font-size:clamp(36px,8vw,68px);
+  font-size:var(--prompt-font-size);
   font-weight:900;
   line-height:.95;
   overflow-wrap:anywhere;
@@ -355,7 +356,7 @@ button.dimmed{
   border-radius:0;
   background:transparent;
   color:var(--layer-color,#fff);
-  font-size:clamp(18px,3vw,25px);
+  font-size:var(--prompt-font-size);
   font-weight:900;
   letter-spacing:.04em;
   text-transform:none;
@@ -376,7 +377,7 @@ button.dimmed{
   width:min(90%,720px);
   transform:translateX(-50%);
   color:#67e8f9;
-  font-size:clamp(25px,5.5vw,48px);
+  font-size:var(--prompt-font-size);
   font-weight:950;
   letter-spacing:.025em;
   text-align:center;
@@ -541,6 +542,9 @@ button.dimmed{
   background:#3b82f6;
 }
 @media(max-width:520px){
+  :root{
+    --prompt-font-size:clamp(50px,15vw,76px);
+  }
   body{padding:0}
   .app{width:100%;height:100dvh;min-height:500px}
   .card{min-height:0;padding:18px}
@@ -573,12 +577,6 @@ button.dimmed{
   }
   .status{
     font-size:14px;
-  }
-  .verb{
-    font-size:clamp(50px,15vw,76px);
-  }
-  .layer-prompt{
-    font-size:clamp(28px,8vw,40px);
   }
   .step4-dance{
     width:clamp(50px,15vw,72px);
@@ -730,18 +728,23 @@ button.dimmed{
     </div>
 
     <div class="setting-row">
-      <label for="p1VoiceSelect">P1 voice</label>
+      <label for="p1VoiceSelect">P1 voice · UK English</label>
       <select id="p1VoiceSelect" aria-label="P1 voice"></select>
     </div>
 
     <div class="setting-row">
-      <label for="p2VoiceSelect">P2 voice · male default</label>
+      <label for="p2VoiceSelect">P2 voice · American male</label>
       <select id="p2VoiceSelect" aria-label="P2 voice"></select>
     </div>
 
     <div class="setting-row">
-      <label for="p3VoiceSelect">P3 voice</label>
+      <label for="p3VoiceSelect">P3 voice · Indian English</label>
       <select id="p3VoiceSelect" aria-label="P3 voice"></select>
+    </div>
+
+    <div class="setting-row">
+      <label for="p5VoiceSelect">P5 voice · American English</label>
+      <select id="p5VoiceSelect" aria-label="P5 voice"></select>
     </div>
 
     <div class="setting-row">
@@ -1918,6 +1921,7 @@ const step4DanceSelect = document.getElementById("step4DanceSelect");
 const p1VoiceSelect = document.getElementById("p1VoiceSelect");
 const p2VoiceSelect = document.getElementById("p2VoiceSelect");
 const p3VoiceSelect = document.getElementById("p3VoiceSelect");
+const p5VoiceSelect = document.getElementById("p5VoiceSelect");
 const speechSpeedSelect = document.getElementById("speechSpeedSelect");
 const excitementSelect = document.getElementById("excitementSelect");
 const p1DelaySelect = document.getElementById("p1DelaySelect");
@@ -2007,7 +2011,13 @@ fillTimerSelect(p3DelaySelect, p3DelaySeconds);
 let speechStartTimer = null;
 let speechQueue = [];
 let speechBusy = false;
-const voiceAssignments = {p1:"", p2:"", p3:""};
+const voiceAssignments = {p1:"", p2:"", p3:"", p5:""};
+const languageByGroup = {
+  p1:"en-GB",
+  p2:"en-US",
+  p3:"en-IN",
+  p5:"en-US"
+};
 
 function availableEnglishVoices() {
   if (!("speechSynthesis" in window)) return [];
@@ -2022,17 +2032,36 @@ function assignDifferentDefaultVoices(voices) {
   if (!voices.length) return;
   const femalePattern = /female|samantha|victoria|karen|moira|tessa|fiona|zira|aria|jenny|susan|hazel|linda/i;
   const malePattern = /male|daniel|david|alex|fred|tom|guy|mark|george|james|aaron|arthur|andrew|brian|christopher|eric|liam|matthew|oliver|rishi|ryan|thomas|william/i;
-  const p1Voice = voices.find(voice => femalePattern.test(voice.name)) || voices[0];
-  const p2Voice = voices.find(
-    voice => voice.name !== p1Voice.name && malePattern.test(voice.name)
-  ) || voices.find(voice => voice.name !== p1Voice.name) || p1Voice;
-  const p3Voice = voices.find(
-    voice => voice.name !== p1Voice.name && voice.name !== p2Voice.name
-  ) || voices.find(voice => voice.name !== p1Voice.name) || p1Voice;
+  const normalizedLanguage = voice =>
+    (voice.lang || "").toLowerCase().replace("_", "-");
+  const voicesFor = language => voices.filter(
+    voice => normalizedLanguage(voice) === language.toLowerCase()
+  );
+  const ukVoices = voicesFor("en-GB");
+  const usVoices = voicesFor("en-US");
+  const indianVoices = voicesFor("en-IN");
+
+  const p1Voice =
+    ukVoices.find(voice => femalePattern.test(voice.name)) ||
+    ukVoices[0] ||
+    voices.find(voice => femalePattern.test(voice.name)) ||
+    voices[0];
+  const p2Voice =
+    usVoices.find(voice => malePattern.test(voice.name)) ||
+    usVoices[0] ||
+    voices.find(voice => malePattern.test(voice.name)) ||
+    voices[0];
+  const p3Voice =
+    indianVoices[0] ||
+    voices.find(voice => /india|indian|rishi|veena/i.test(voice.name)) ||
+    voices[0];
+  const p5Voice = usVoices.find(voice => voice.name !== p2Voice.name) ||
+    p2Voice || voices[0];
 
   if (!voiceAssignments.p1) voiceAssignments.p1 = p1Voice.name;
   if (!voiceAssignments.p2) voiceAssignments.p2 = p2Voice.name;
   if (!voiceAssignments.p3) voiceAssignments.p3 = p3Voice.name;
+  if (!voiceAssignments.p5) voiceAssignments.p5 = p5Voice.name;
 }
 
 function populateVoiceSelectors() {
@@ -2041,7 +2070,8 @@ function populateVoiceSelectors() {
   assignDifferentDefaultVoices(voices);
 
   for (const [group, select] of [
-    ["p1",p1VoiceSelect],["p2",p2VoiceSelect],["p3",p3VoiceSelect]
+    ["p1",p1VoiceSelect],["p2",p2VoiceSelect],
+    ["p3",p3VoiceSelect],["p5",p5VoiceSelect]
   ]) {
     select.innerHTML = "";
     for (const voice of voices) {
@@ -2066,7 +2096,7 @@ function processSpeechQueue() {
   const entry = speechQueue.shift();
   const energeticEnding = excitementLevel >= 7 && !/[!?]$/.test(entry.text) ? "!" : "";
   const utterance = new SpeechSynthesisUtterance(`${entry.text}${energeticEnding}`);
-  utterance.lang = "en-US";
+  utterance.lang = languageByGroup[entry.group] || "en-US";
   const excitementRateBoost = 0.92 + excitementLevel * 0.028;
   utterance.rate = Math.max(
     0.1,
@@ -2083,7 +2113,11 @@ function processSpeechQueue() {
   const preferred = getVoice(entry.group);
   if (preferred) {
     utterance.voice = preferred;
-    utterance.lang = preferred.lang;
+    const requestedLanguage = languageByGroup[entry.group] || "en-US";
+    const preferredLanguage = (preferred.lang || "").replace("_", "-");
+    utterance.lang = preferredLanguage.toLowerCase() === requestedLanguage.toLowerCase()
+      ? preferredLanguage
+      : requestedLanguage;
   }
 
   utterance.onend = utterance.onerror = () => {
@@ -2120,7 +2154,8 @@ function speak(text) {
 }
 
 for (const [group, select] of [
-  ["p1",p1VoiceSelect],["p2",p2VoiceSelect],["p3",p3VoiceSelect]
+  ["p1",p1VoiceSelect],["p2",p2VoiceSelect],
+  ["p3",p3VoiceSelect],["p5",p5VoiceSelect]
 ]) {
   select.addEventListener("change", event => {
     voiceAssignments[group] = event.target.value;
