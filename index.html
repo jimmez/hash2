@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>HASH-50</title>
+<title>HASH-51</title>
 <style>
 :root{
   --red:#ef4444;
@@ -659,6 +659,43 @@ button.dimmed{
     font-size:16px;
   }
 }
+@media (orientation:landscape) and (max-height:520px) and (pointer:coarse){
+  html{
+    scroll-behavior:smooth;
+    scroll-padding-top:0;
+  }
+  body{
+    display:block;
+    min-height:100%;
+    padding:0;
+    overflow-y:auto;
+    overscroll-behavior-y:contain;
+  }
+  .app{
+    width:100%;
+    height:auto;
+    min-height:0;
+  }
+  .sequence-track{
+    scroll-margin-top:0;
+  }
+  .card{
+    flex:none;
+    width:100%;
+    height:calc(100dvh - 44px);
+    min-height:0;
+    padding:10px 18px;
+  }
+  .prompt-row{
+    grid-template-columns:repeat(11,minmax(0,1fr));
+  }
+  .utility-row{
+    grid-template-columns:1fr auto auto auto auto;
+  }
+  #sizeBtn{
+    display:none;
+  }
+}
 </style>
 </head>
 <body>
@@ -740,7 +777,7 @@ button.dimmed{
 </div>
 
 <div id="launchSignature" class="launch-signature" role="status">
-  Jimmy James · 31.07.2026 · Version 50
+  Jimmy James · 31.07.2026 · Version 51
 </div>
 
 <div id="settingsModal" class="modal" aria-hidden="true">
@@ -3042,10 +3079,23 @@ function updateSoundIndicator() {
   soundIndicator.setAttribute("aria-hidden", String(!visible));
 }
 
+function isMobileLandscape() {
+  return window.matchMedia("(orientation:landscape) and (max-height:520px) and (pointer:coarse)").matches;
+}
+
+function focusLandscapeStage() {
+  if (!isMobileLandscape()) return;
+  document.querySelector(".sequence-track").scrollIntoView({
+    behavior:"auto",
+    block:"start"
+  });
+}
+
 function applyControlsHidden(hidden) {
   controlsHidden = hidden;
   appHeader.classList.toggle("controls-hidden", hidden);
   updateSoundIndicator();
+  if (hidden) requestAnimationFrame(focusLandscapeStage);
 }
 
 function scheduleControlsHide() {
@@ -3463,6 +3513,20 @@ appHeader.addEventListener("click", event => {
 
 appHeader.addEventListener("change", scheduleControlsHide);
 
+window.addEventListener("scroll", () => {
+  if (!isMobileLandscape() || !controlsHidden) return;
+  if (window.scrollY < Math.max(24, appHeader.offsetHeight * .35)) {
+    showAllControls();
+  }
+}, {passive:true});
+
+window.addEventListener("orientationchange", () => {
+  setTimeout(() => {
+    if (isMobileLandscape()) focusLandscapeStage();
+    else window.scrollTo({top:0,behavior:"auto"});
+  }, 180);
+});
+
 controlsDurationSelect.addEventListener("change", event => {
   controlsDuration = event.target.value === "constant"
     ? "constant"
@@ -3526,6 +3590,7 @@ showEmptyWaitingScreen();
 restartP2Timer();
 restartP3Timer();
 applyControlsHidden(true);
+setTimeout(focusLandscapeStage, 80);
 setTimeout(() => {
   const signature = document.getElementById("launchSignature");
   if (signature) signature.remove();
