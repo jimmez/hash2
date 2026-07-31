@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>HASH-51</title>
+<title>HASH-52</title>
 <style>
 :root{
   --red:#ef4444;
@@ -102,6 +102,19 @@ header.controls-hidden #oneTimeBtn.active{
 .sound-indicator:focus-visible{
   outline:3px solid #60a5fa;
   outline-offset:3px;
+}
+.sound-indicator.muted::after{
+  content:"";
+  position:absolute;
+  left:6px;
+  top:21px;
+  width:34px;
+  height:4px;
+  border-radius:999px;
+  background:#ef4444;
+  box-shadow:0 0 5px rgba(239,68,68,.85);
+  transform:rotate(-45deg);
+  pointer-events:none;
 }
 .control-row{
   display:grid;
@@ -710,7 +723,7 @@ button.dimmed{
       <button id="p2Btn" class="prompt-mode" type="button" aria-label="Toggle prompt two">P2</button>
       <button id="p3Btn" class="prompt-mode" type="button" aria-label="Toggle prompt three">P3</button>
       <button id="p4Btn" class="prompt-mode" type="button" aria-label="Toggle timed prompt display">P4</button>
-      <button id="p5Btn" class="prompt-mode dimmed" type="button" aria-label="Toggle visual occupation prompt">P5</button>
+      <button id="p5Btn" class="prompt-mode active" type="button" aria-label="Toggle visual occupation prompt">P5</button>
       <button id="soundBtn" type="button" aria-label="Toggle sound">Sound: Off</button>
     </div>
 
@@ -777,7 +790,7 @@ button.dimmed{
 </div>
 
 <div id="launchSignature" class="launch-signature" role="status">
-  Jimmy James · 31.07.2026 · Version 51
+  Jimmy James · 31.07.2026 · Version 52
 </div>
 
 <div id="settingsModal" class="modal" aria-hidden="true">
@@ -835,7 +848,7 @@ button.dimmed{
     <div class="setting-row">
       <span>P5 occupation prompt</span>
       <label class="switch">
-        <input id="occupationVisualToggle" type="checkbox">
+        <input id="occupationVisualToggle" type="checkbox" checked>
         On
       </label>
     </div>
@@ -1983,7 +1996,7 @@ let p1Visible = true;
 let p2Visible = true;
 let p3Visible = true;
 let p4Active = true;
-let occupationVisualOn = false;
+let occupationVisualOn = true;
 let occupationShownForSet = false;
 let occupationSpokenForSet = false;
 let occupationRevealTimer = null;
@@ -3074,8 +3087,14 @@ function newSet() {
 }
 
 function updateSoundIndicator() {
-  const visible = controlsHidden && playing && soundOn && speakerIndicatorEnabled;
+  const visible = controlsHidden && playing && speakerIndicatorEnabled;
   soundIndicator.classList.toggle("hidden", !visible);
+  soundIndicator.classList.toggle("muted", !soundOn);
+  soundIndicator.textContent = "🔊";
+  soundIndicator.setAttribute(
+    "aria-label",
+    soundOn ? "Sound is on. Tap to turn sound off" : "Sound is off. Tap to turn sound on"
+  );
   soundIndicator.setAttribute("aria-hidden", String(!visible));
 }
 
@@ -3380,7 +3399,7 @@ bindTap("oneTimeBtn", toggleOneTimeMode);
 bindTap("manualBtn", toggleManualMode);
 bindTap("newBtn", newSet);
 bindTap("soundBtn", () => setSound(!soundOn, true));
-bindTap("soundIndicator", () => setSound(false, false));
+bindTap("soundIndicator", () => setSound(!soundOn, true));
 bindTap("p1Btn", () => togglePromptLayer("p1"));
 bindTap("p2Btn", () => togglePromptLayer("p2"));
 bindTap("p3Btn", () => togglePromptLayer("p3"));
