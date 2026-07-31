@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>HASH-52</title>
+<title>HASH-53</title>
 <style>
 :root{
   --red:#ef4444;
@@ -790,7 +790,7 @@ button.dimmed{
 </div>
 
 <div id="launchSignature" class="launch-signature" role="status">
-  Jimmy James · 31.07.2026 · Version 52
+  Jimmy James · 31.07.2026 · Version 53
 </div>
 
 <div id="settingsModal" class="modal" aria-hidden="true">
@@ -3087,7 +3087,7 @@ function newSet() {
 }
 
 function updateSoundIndicator() {
-  const visible = controlsHidden && playing && speakerIndicatorEnabled;
+  const visible = controlsHidden && speakerIndicatorEnabled;
   soundIndicator.classList.toggle("hidden", !visible);
   soundIndicator.classList.toggle("muted", !soundOn);
   soundIndicator.textContent = "🔊";
