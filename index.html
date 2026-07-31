@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>HASH-46</title>
+<title>HASH-49</title>
 <style>
 :root{
   --red:#ef4444;
@@ -48,9 +48,60 @@ header{
   flex-direction:column;
   gap:5px;
   padding:6px;
-  background:#080808;
+  background:#000;
   position:relative;
   z-index:20;
+}
+header .control-row > *,
+header .timer-label-row,
+header .weight-row{
+  transition:opacity .2s ease,visibility .2s ease;
+}
+header.controls-hidden .control-row > *,
+header.controls-hidden .timer-label-row,
+header.controls-hidden .weight-row{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+header.controls-hidden #playBtn.slow-burning,
+header.controls-hidden #oneTimeBtn.active{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+}
+header.controls-hidden #playBtn.slow-burning{
+  opacity:.28;
+  animation:none;
+  filter:saturate(.45) brightness(.48);
+  box-shadow:none;
+}
+header.controls-hidden #oneTimeBtn.active{
+  opacity:.10;
+  animation:none;
+  filter:saturate(.25) brightness(.38);
+  box-shadow:none;
+}
+.sound-indicator{
+  position:fixed;
+  top:max(12px,env(safe-area-inset-top));
+  right:max(12px,env(safe-area-inset-right));
+  z-index:80;
+  width:46px;
+  height:46px;
+  min-height:46px;
+  padding:0;
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:50%;
+  background:rgba(16,24,40,.86);
+  box-shadow:0 0 18px rgba(59,130,246,.38);
+  color:#fff;
+  font-size:23px;
+  backdrop-filter:blur(8px);
+}
+.sound-indicator:focus-visible{
+  outline:3px solid #60a5fa;
+  outline-offset:3px;
 }
 .control-row{
   display:grid;
@@ -414,6 +465,25 @@ button.dimmed{
   background:#222;
   overflow:hidden;
 }
+.launch-signature{
+  position:fixed;
+  left:50%;
+  bottom:12px;
+  z-index:90;
+  transform:translateX(-50%);
+  width:max-content;
+  max-width:calc(100vw - 24px);
+  padding:8px 13px;
+  border:1px solid #334155;
+  border-radius:999px;
+  background:rgba(15,23,42,.94);
+  color:#cbd5e1;
+  font-size:clamp(12px,2.4vw,16px);
+  font-weight:800;
+  letter-spacing:.035em;
+  text-align:center;
+  pointer-events:none;
+}
 .bar{
   height:100%;
   width:0;
@@ -593,7 +663,7 @@ button.dimmed{
 </head>
 <body>
 <div class="app">
-  <header>
+  <header id="appHeader" class="controls-hidden" aria-label="App controls. Tap this area to show all controls.">
     <div class="control-row prompt-row">
       <button id="playBtn" class="main-play dimmed" type="button" aria-label="Play or stop">Play</button>
       <button id="oneTimeBtn" class="one-time active" type="button" aria-label="Play one complete sequence">One time</button>
@@ -636,6 +706,8 @@ button.dimmed{
     </div>
   </header>
 
+  <button id="soundIndicator" class="sound-indicator hidden" type="button" aria-label="Sound is on. Tap to turn sound off">🔊</button>
+
 
   <div class="sequence-track" aria-label="Current position in four-step sequence">
     <div class="sequence-slot"><span class="sequence-dot"></span></div>
@@ -667,6 +739,10 @@ button.dimmed{
   </div>
 </div>
 
+<div id="launchSignature" class="launch-signature" role="status">
+  Jimmy James · 31.07.2026 · Version 49
+</div>
+
 <div id="settingsModal" class="modal" aria-hidden="true">
   <section class="panel" aria-label="Settings">
     <h2>Settings</h2>
@@ -690,6 +766,33 @@ button.dimmed{
         <input id="soundToggle" type="checkbox">
         On
       </label>
+    </div>
+
+    <div class="setting-row">
+      <label for="controlsDurationSelect">Show all buttons time</label>
+      <select id="controlsDurationSelect" aria-label="How long all buttons remain visible">
+        <option value="3">3 seconds</option>
+        <option value="5">5 seconds</option>
+        <option value="10" selected>10 seconds</option>
+        <option value="15">15 seconds</option>
+        <option value="20">20 seconds</option>
+        <option value="30">30 seconds</option>
+        <option value="60">60 seconds</option>
+        <option value="constant">Constant</option>
+      </select>
+    </div>
+
+    <div class="setting-row">
+      <span>Speaker icon when controls are hidden</span>
+      <label class="switch">
+        <input id="speakerIndicatorToggle" type="checkbox" checked>
+        On
+      </label>
+    </div>
+
+    <div class="setting-row">
+      <span>GitHub backup</span>
+      <a href="https://github.com/jimmez/hash2/blob/main/index.html" target="_blank" rel="noopener noreferrer">Open backup source</a>
     </div>
 
     <div class="setting-row">
@@ -1887,6 +1990,10 @@ let restoringPromptHistory = false;
 let middleTapTimer = null;
 let lastMiddleTapAt = 0;
 let doubleSize = false;
+let controlsHidden = true;
+let controlsDuration = 10;
+let controlsHideTimer = null;
+let speakerIndicatorEnabled = true;
 
 const verbDisplay = document.getElementById("verbDisplay");
 const goalDisplay = document.getElementById("goalDisplay");
@@ -1944,6 +2051,10 @@ const occupationDirectory = document.getElementById("occupationDirectory");
 const sizeBtn = document.getElementById("sizeBtn");
 const barBtn = document.getElementById("barBtn");
 const progressToggle = document.getElementById("progressToggle");
+const appHeader = document.getElementById("appHeader");
+const soundIndicator = document.getElementById("soundIndicator");
+const controlsDurationSelect = document.getElementById("controlsDurationSelect");
+const speakerIndicatorToggle = document.getElementById("speakerIndicatorToggle");
 
 const timeOptions = timerOptions;
 
@@ -2925,6 +3036,34 @@ function newSet() {
   startSelectedPlayback(true);
 }
 
+function updateSoundIndicator() {
+  const visible = controlsHidden && playing && soundOn && speakerIndicatorEnabled;
+  soundIndicator.classList.toggle("hidden", !visible);
+  soundIndicator.setAttribute("aria-hidden", String(!visible));
+}
+
+function applyControlsHidden(hidden) {
+  controlsHidden = hidden;
+  appHeader.classList.toggle("controls-hidden", hidden);
+  updateSoundIndicator();
+}
+
+function scheduleControlsHide() {
+  clearTimeout(controlsHideTimer);
+  if (controlsDuration === "constant") {
+    applyControlsHidden(false);
+    return;
+  }
+  controlsHideTimer = setTimeout(() => {
+    applyControlsHidden(true);
+  }, Number(controlsDuration) * 1000);
+}
+
+function showAllControls() {
+  applyControlsHidden(false);
+  scheduleControlsHide();
+}
+
 function updatePlaybackButtons() {
   const oneTimeRunning = oneTimeMode && playing;
   oneTimeBtn.classList.toggle("active", oneTimeEnabled);
@@ -2938,6 +3077,7 @@ function updatePlaybackButtons() {
   manualBtn.classList.toggle("active", manualEnabled);
   manualBtn.classList.toggle("dimmed", !manualEnabled);
   updateBarButton();
+  updateSoundIndicator();
 }
 
 function showEmptyWaitingScreen() {
@@ -3133,6 +3273,7 @@ function setSound(enabled, announce = false) {
   soundBtn.textContent = `Sound: ${soundOn ? "On" : "Off"}`;
   soundBtn.classList.toggle("active", soundOn);
   soundToggle.checked = soundOn;
+  updateSoundIndicator();
 
   if (!soundOn && "speechSynthesis" in window) {
     speechSynthesis.cancel();
@@ -3172,6 +3313,7 @@ function closeSettings() {
   settingsModal.classList.remove("open");
   settingsModal.setAttribute("aria-hidden", "true");
   refreshCurrentOrWaiting();
+  scheduleControlsHide();
 }
 
 function bindTap(id, handler) {
@@ -3188,6 +3330,7 @@ bindTap("oneTimeBtn", toggleOneTimeMode);
 bindTap("manualBtn", toggleManualMode);
 bindTap("newBtn", newSet);
 bindTap("soundBtn", () => setSound(!soundOn, true));
+bindTap("soundIndicator", () => setSound(false, false));
 bindTap("p1Btn", () => togglePromptLayer("p1"));
 bindTap("p2Btn", () => togglePromptLayer("p2"));
 bindTap("p3Btn", () => togglePromptLayer("p3"));
@@ -3265,6 +3408,10 @@ p1WeightSelect.addEventListener("change", applyWeightChanges);
 p2WeightSelect.addEventListener("change", applyWeightChanges);
 p3WeightSelect.addEventListener("change", applyWeightChanges);
 
+soundToggle.addEventListener("change", event => {
+  setSound(event.target.checked, false);
+});
+
 occupationVisualToggle.addEventListener("change", applyOccupationSettings);
 
 step4DanceSelect.addEventListener("change", event => {
@@ -3303,6 +3450,29 @@ document.getElementById("detailsToggle").addEventListener("change", event => {
 
 settingsModal.addEventListener("pointerdown", event => {
   if (event.target === settingsModal) closeSettings();
+});
+
+appHeader.addEventListener("pointerdown", () => {
+  if (controlsHidden) showAllControls();
+  else scheduleControlsHide();
+});
+
+appHeader.addEventListener("click", event => {
+  event.stopPropagation();
+});
+
+appHeader.addEventListener("change", scheduleControlsHide);
+
+controlsDurationSelect.addEventListener("change", event => {
+  controlsDuration = event.target.value === "constant"
+    ? "constant"
+    : Number(event.target.value);
+  showAllControls();
+});
+
+speakerIndicatorToggle.addEventListener("change", event => {
+  speakerIndicatorEnabled = event.target.checked;
+  updateSoundIndicator();
 });
 
 occupationListModal.addEventListener("pointerdown", event => {
@@ -3355,6 +3525,11 @@ setBarEnabled(false);
 showEmptyWaitingScreen();
 restartP2Timer();
 restartP3Timer();
+applyControlsHidden(true);
+setTimeout(() => {
+  const signature = document.getElementById("launchSignature");
+  if (signature) signature.remove();
+}, 2000);
 </script>
 </body>
 </html>
