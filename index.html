@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>HASH-53</title>
+<title>HASH-54</title>
 <style>
 :root{
   --red:#ef4444;
@@ -85,7 +85,7 @@ header.controls-hidden #oneTimeBtn.active{
 .sound-indicator{
   position:fixed;
   top:max(12px,env(safe-area-inset-top));
-  right:max(12px,env(safe-area-inset-right));
+  left:max(12px,env(safe-area-inset-left));
   z-index:80;
   width:46px;
   height:46px;
@@ -98,6 +98,42 @@ header.controls-hidden #oneTimeBtn.active{
   color:#fff;
   font-size:23px;
   backdrop-filter:blur(8px);
+}
+.volume-control{
+  position:fixed;
+  top:calc(max(12px,env(safe-area-inset-top)) + 52px);
+  left:max(12px,env(safe-area-inset-left));
+  z-index:79;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:5px;
+  width:46px;
+  padding:8px 5px;
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:15px;
+  background:rgba(16,24,40,.92);
+  box-shadow:0 8px 24px rgba(0,0,0,.5);
+  backdrop-filter:blur(8px);
+}
+.volume-control.hidden{
+  display:none;
+}
+.volume-slider{
+  width:30px;
+  height:20dvh;
+  min-height:64px;
+  max-height:180px;
+  margin:0;
+  writing-mode:vertical-lr;
+  direction:rtl;
+  accent-color:#3b82f6;
+  cursor:pointer;
+}
+.volume-value{
+  color:#dbeafe;
+  font-size:10px;
+  font-weight:800;
 }
 .sound-indicator:focus-visible{
   outline:3px solid #60a5fa;
@@ -757,6 +793,10 @@ button.dimmed{
   </header>
 
   <button id="soundIndicator" class="sound-indicator hidden" type="button" aria-label="Sound is on. Tap to turn sound off">🔊</button>
+  <div id="volumeControl" class="volume-control hidden" role="group" aria-label="Speech volume">
+    <input id="volumeSlider" class="volume-slider" type="range" min="0" max="100" step="5" value="0" aria-label="Speech volume">
+    <output id="volumeValue" class="volume-value" for="volumeSlider">0%</output>
+  </div>
 
 
   <div class="sequence-track" aria-label="Current position in four-step sequence">
@@ -790,7 +830,7 @@ button.dimmed{
 </div>
 
 <div id="launchSignature" class="launch-signature" role="status">
-  Jimmy James · 31.07.2026 · Version 53
+  Jimmy James · 02.08.2026 · Version 54
 </div>
 
 <div id="settingsModal" class="modal" aria-hidden="true">
@@ -2016,6 +2056,8 @@ let setIndex = 0;
 let cardIndex = 0;
 let delaySeconds = 15;
 let soundOn = false;
+let speechVolume = 1;
+let lastAudibleVolume = 1;
 let speechSpeedPercent = 100;
 let excitementLevel = 7;
 let playing = false;
@@ -2103,6 +2145,9 @@ const barBtn = document.getElementById("barBtn");
 const progressToggle = document.getElementById("progressToggle");
 const appHeader = document.getElementById("appHeader");
 const soundIndicator = document.getElementById("soundIndicator");
+const volumeControl = document.getElementById("volumeControl");
+const volumeSlider = document.getElementById("volumeSlider");
+const volumeValue = document.getElementById("volumeValue");
 const controlsDurationSelect = document.getElementById("controlsDurationSelect");
 const speakerIndicatorToggle = document.getElementById("speakerIndicatorToggle");
 
@@ -2269,7 +2314,7 @@ function processSpeechQueue() {
     2,
     (pitchByGroup[entry.group] || 1.0) * excitementPitchBoost
   );
-  utterance.volume = 1;
+  utterance.volume = speechVolume;
 
   const preferred = getVoice(entry.group);
   if (preferred) {
@@ -3096,6 +3141,18 @@ function updateSoundIndicator() {
     soundOn ? "Sound is on. Tap to turn sound off" : "Sound is off. Tap to turn sound on"
   );
   soundIndicator.setAttribute("aria-hidden", String(!visible));
+  if (!visible) volumeControl.classList.add("hidden");
+}
+
+function updateVolumeControl() {
+  const displayedVolume = soundOn ? Math.round(speechVolume * 100) : 0;
+  volumeSlider.value = String(displayedVolume);
+  volumeValue.textContent = `${displayedVolume}%`;
+}
+
+function toggleVolumeControl() {
+  if (soundIndicator.classList.contains("hidden")) return;
+  volumeControl.classList.toggle("hidden");
 }
 
 function isMobileLandscape() {
@@ -3338,11 +3395,13 @@ function handleMiddlePointerUp(event) {
 }
 
 function setSound(enabled, announce = false) {
+  if (enabled && speechVolume <= 0) speechVolume = lastAudibleVolume || 1;
   soundOn = enabled;
   soundBtn.textContent = `Sound: ${soundOn ? "On" : "Off"}`;
   soundBtn.classList.toggle("active", soundOn);
   soundToggle.checked = soundOn;
   updateSoundIndicator();
+  updateVolumeControl();
 
   if (!soundOn && "speechSynthesis" in window) {
     speechSynthesis.cancel();
@@ -3399,7 +3458,7 @@ bindTap("oneTimeBtn", toggleOneTimeMode);
 bindTap("manualBtn", toggleManualMode);
 bindTap("newBtn", newSet);
 bindTap("soundBtn", () => setSound(!soundOn, true));
-bindTap("soundIndicator", () => setSound(!soundOn, true));
+bindTap("soundIndicator", toggleVolumeControl);
 bindTap("p1Btn", () => togglePromptLayer("p1"));
 bindTap("p2Btn", () => togglePromptLayer("p2"));
 bindTap("p3Btn", () => togglePromptLayer("p3"));
@@ -3556,6 +3615,27 @@ controlsDurationSelect.addEventListener("change", event => {
 speakerIndicatorToggle.addEventListener("change", event => {
   speakerIndicatorEnabled = event.target.checked;
   updateSoundIndicator();
+});
+
+volumeControl.addEventListener("click", event => {
+  event.stopPropagation();
+});
+
+volumeSlider.addEventListener("input", event => {
+  const value = Number(event.target.value) / 100;
+  if (value <= 0) {
+    setSound(false, false);
+    return;
+  }
+  speechVolume = value;
+  lastAudibleVolume = value;
+  setSound(true, false);
+});
+
+document.addEventListener("pointerdown", event => {
+  if (!event.target.closest("#soundIndicator,#volumeControl")) {
+    volumeControl.classList.add("hidden");
+  }
 });
 
 occupationListModal.addEventListener("pointerdown", event => {
