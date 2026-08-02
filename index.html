@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>HASH-54</title>
+<title>HASH-56</title>
 <style>
 :root{
   --red:#ef4444;
@@ -84,7 +84,7 @@ header.controls-hidden #oneTimeBtn.active{
 }
 .sound-indicator{
   position:fixed;
-  top:max(12px,env(safe-area-inset-top));
+  top:var(--speaker-top,max(12px,env(safe-area-inset-top)));
   left:max(12px,env(safe-area-inset-left));
   z-index:80;
   width:46px;
@@ -101,8 +101,8 @@ header.controls-hidden #oneTimeBtn.active{
 }
 .volume-control{
   position:fixed;
-  top:calc(max(12px,env(safe-area-inset-top)) + 52px);
-  left:max(12px,env(safe-area-inset-left));
+  top:calc(var(--speaker-top,max(12px,env(safe-area-inset-top))) + 52px);
+  left:max(15vw,calc(env(safe-area-inset-left) + 12px));
   z-index:79;
   display:flex;
   flex-direction:column;
@@ -830,7 +830,7 @@ button.dimmed{
 </div>
 
 <div id="launchSignature" class="launch-signature" role="status">
-  Jimmy James · 02.08.2026 · Version 54
+  Jimmy James · 03.08.2026 · Version 56
 </div>
 
 <div id="settingsModal" class="modal" aria-hidden="true">
@@ -3142,6 +3142,16 @@ function updateSoundIndicator() {
   );
   soundIndicator.setAttribute("aria-hidden", String(!visible));
   if (!visible) volumeControl.classList.add("hidden");
+  requestAnimationFrame(positionSpeakerIcon);
+}
+
+function positionSpeakerIcon() {
+  const track = document.querySelector(".sequence-track");
+  if (!track) return;
+  const trackRect = track.getBoundingClientRect();
+  const stepLineY = trackRect.top + trackRect.height / 2;
+  const speakerTop = Math.max(12, stepLineY * .75 - 23);
+  document.documentElement.style.setProperty("--speaker-top", `${speakerTop}px`);
 }
 
 function updateVolumeControl() {
@@ -3592,11 +3602,14 @@ appHeader.addEventListener("click", event => {
 appHeader.addEventListener("change", scheduleControlsHide);
 
 window.addEventListener("scroll", () => {
+  positionSpeakerIcon();
   if (!isMobileLandscape() || !controlsHidden) return;
   if (window.scrollY < Math.max(24, appHeader.offsetHeight * .35)) {
     showAllControls();
   }
 }, {passive:true});
+
+window.addEventListener("resize", positionSpeakerIcon);
 
 window.addEventListener("orientationchange", () => {
   setTimeout(() => {
@@ -3690,6 +3703,7 @@ restartP2Timer();
 restartP3Timer();
 applyControlsHidden(true);
 setTimeout(focusLandscapeStage, 80);
+setTimeout(positionSpeakerIcon, 100);
 setTimeout(() => {
   const signature = document.getElementById("launchSignature");
   if (signature) signature.remove();
