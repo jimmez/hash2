@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>HASH-56</title>
+<title>HASH-58</title>
 <style>
 :root{
   --red:#ef4444;
@@ -102,7 +102,7 @@ header.controls-hidden #oneTimeBtn.active{
 .volume-control{
   position:fixed;
   top:calc(var(--speaker-top,max(12px,env(safe-area-inset-top))) + 52px);
-  left:max(15vw,calc(env(safe-area-inset-left) + 12px));
+  left:var(--volume-left,18vw);
   z-index:79;
   display:flex;
   flex-direction:column;
@@ -830,7 +830,7 @@ button.dimmed{
 </div>
 
 <div id="launchSignature" class="launch-signature" role="status">
-  Jimmy James · 03.08.2026 · Version 56
+  Jimmy James · 03.08.2026 · Version 58
 </div>
 
 <div id="settingsModal" class="modal" aria-hidden="true">
@@ -3147,11 +3147,17 @@ function updateSoundIndicator() {
 
 function positionSpeakerIcon() {
   const track = document.querySelector(".sequence-track");
-  if (!track) return;
+  const firstStep = document.querySelector(".sequence-slot");
+  if (!track || !firstStep) return;
   const trackRect = track.getBoundingClientRect();
+  const stepRect = firstStep.getBoundingClientRect();
+  const firstStepX = stepRect.left + stepRect.width / 2;
   const stepLineY = trackRect.top + trackRect.height / 2;
   const speakerTop = Math.max(12, stepLineY * .75 - 23);
+  const speakerLeft = soundIndicator.getBoundingClientRect().left;
+  const volumeLeft = Math.max(12, Math.min(speakerLeft + 60, firstStepX + 10));
   document.documentElement.style.setProperty("--speaker-top", `${speakerTop}px`);
+  document.documentElement.style.setProperty("--volume-left", `${volumeLeft}px`);
 }
 
 function updateVolumeControl() {
