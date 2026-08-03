@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>HASH-58</title>
+<title>HASH-59</title>
 <style>
 :root{
   --red:#ef4444;
@@ -830,7 +830,7 @@ button.dimmed{
 </div>
 
 <div id="launchSignature" class="launch-signature" role="status">
-  Jimmy James · 03.08.2026 · Version 58
+  Jimmy James · 03.08.2026 · Version 59
 </div>
 
 <div id="settingsModal" class="modal" aria-hidden="true">
@@ -3155,7 +3155,7 @@ function positionSpeakerIcon() {
   const stepLineY = trackRect.top + trackRect.height / 2;
   const speakerTop = Math.max(12, stepLineY * .75 - 23);
   const speakerLeft = soundIndicator.getBoundingClientRect().left;
-  const volumeLeft = Math.max(12, Math.min(speakerLeft + 60, firstStepX + 10));
+  const volumeLeft = Math.max(0, Math.min(speakerLeft, firstStepX - 52));
   document.documentElement.style.setProperty("--speaker-top", `${speakerTop}px`);
   document.documentElement.style.setProperty("--volume-left", `${volumeLeft}px`);
 }
